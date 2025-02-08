@@ -1,5 +1,12 @@
 
+import { ArrowRight } from "lucide-react";
+import { toast } from "sonner";
+
 const FeaturedAgent = () => {
+  const handleTryNow = () => {
+    toast.info("Feature coming soon!");
+  };
+
   return (
     <div className="relative h-[500px] w-full overflow-hidden rounded-3xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 animate-fadeIn">
       <div className="absolute inset-0 bg-grid-white/10" />
@@ -16,8 +23,12 @@ const FeaturedAgent = () => {
               Experience the next generation of AI assistance with our featured agent.
               Boost your productivity and creativity like never before.
             </p>
-            <button className="px-8 py-3 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
+            <button
+              onClick={handleTryNow}
+              className="flex items-center gap-2 px-8 py-3 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+            >
               Try Now
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>

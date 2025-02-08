@@ -9,24 +9,28 @@ const agents = [
     description: "Enhance your writing with AI-powered suggestions and improvements.",
     category: "Productivity",
     imageUrl: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80",
+    downloads: 1234,
   },
   {
     name: "Code Companion",
     description: "Your AI pair programmer that helps you write better code faster.",
     category: "Development",
     imageUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+    downloads: 2345,
   },
   {
     name: "Design Assistant",
     description: "Create beautiful designs with AI-powered suggestions and templates.",
     category: "Design",
     imageUrl: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80",
+    downloads: 3456,
   },
   {
     name: "Research Helper",
     description: "Accelerate your research with AI-powered insights and analysis.",
     category: "Education",
     imageUrl: "https://images.unsplash.com/photo-1483058712412-4245e9b90334?auto=format&fit=crop&w=800&q=80",
+    downloads: 4567,
   },
 ];
 
