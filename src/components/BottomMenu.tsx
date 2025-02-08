@@ -1,5 +1,5 @@
 
-import { Calendar, GamepadIcon, AppsIcon, MonitorPlay, Search } from "lucide-react";
+import { Calendar, Gamepad, AppWindow, MonitorPlay, Search } from "lucide-react";
 import { toast } from "sonner";
 
 interface BottomMenuProps {
@@ -9,8 +9,8 @@ interface BottomMenuProps {
 
 const menuItems = [
   { id: 1, label: "Today", icon: Calendar, action: () => toast.info("Today section coming soon!") },
-  { id: 2, label: "Games", icon: GamepadIcon, action: () => toast.info("Games section coming soon!") },
-  { id: 3, label: "Apps", icon: AppsIcon, action: () => toast.info("Apps section coming soon!") },
+  { id: 2, label: "Games", icon: Gamepad, action: () => toast.info("Games section coming soon!") },
+  { id: 3, label: "Apps", icon: AppWindow, action: () => toast.info("Apps section coming soon!") },
   { id: 4, label: "Arcade", icon: MonitorPlay, action: () => toast.info("Arcade section coming soon!") },
   { id: 5, label: "Search", icon: Search, action: () => toast.info("Search section coming soon!") },
 ];

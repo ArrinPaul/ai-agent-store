@@ -42,6 +42,28 @@ const Index = () => {
         <div className="container mx-auto px-4 py-8">
           <FeaturedAgent />
           
+          <div className="mt-12 p-6 bg-secondary/20 rounded-xl">
+            <h3 className="text-xl font-semibold mb-4">Quick Stats</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-background p-4 rounded-lg text-center">
+                <p className="text-2xl font-bold text-primary">1.2M+</p>
+                <p className="text-sm text-muted-foreground">Total Downloads</p>
+              </div>
+              <div className="bg-background p-4 rounded-lg text-center">
+                <p className="text-2xl font-bold text-primary">500+</p>
+                <p className="text-sm text-muted-foreground">Active Agents</p>
+              </div>
+              <div className="bg-background p-4 rounded-lg text-center">
+                <p className="text-2xl font-bold text-primary">50k+</p>
+                <p className="text-sm text-muted-foreground">Daily Users</p>
+              </div>
+              <div className="bg-background p-4 rounded-lg text-center">
+                <p className="text-2xl font-bold text-primary">4.8</p>
+                <p className="text-sm text-muted-foreground">Average Rating</p>
+              </div>
+            </div>
+          </div>
+          
           <div className="mt-16">
             <h2 className="text-2xl font-bold mb-8">Popular AI Agents</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
