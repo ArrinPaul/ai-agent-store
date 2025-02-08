@@ -15,10 +15,23 @@ const Navigation = () => {
     toast.info("Upload feature coming soon!");
   };
 
+  const handleMenu = () => {
+    toast.info("Menu coming soon!");
+  };
+
   return (
     <nav className="glass-effect fixed top-0 w-full z-50 border-b">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="text-2xl font-bold">AI Store</div>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleMenu}
+            className="p-2 hover:bg-secondary/80 rounded-lg transition-colors"
+            aria-label="Menu"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+          <div className="text-2xl font-bold">AI Store</div>
+        </div>
         <div className="flex items-center space-x-6">
           <form onSubmit={handleSearch} className="relative">
             <input
