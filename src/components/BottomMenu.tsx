@@ -1,5 +1,5 @@
 
-import { Calendar, Gamepad, AppWindow, MonitorPlay, Search } from "lucide-react";
+import { Home, Search, Upload, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface BottomMenuProps {
@@ -8,18 +8,17 @@ interface BottomMenuProps {
 }
 
 const menuItems = [
-  { id: 1, label: "Today", icon: Calendar, action: () => toast.info("Today section coming soon!") },
-  { id: 2, label: "Games", icon: Gamepad, action: () => toast.info("Games section coming soon!") },
-  { id: 3, label: "Apps", icon: AppWindow, action: () => toast.info("Apps section coming soon!") },
-  { id: 4, label: "Arcade", icon: MonitorPlay, action: () => toast.info("Arcade section coming soon!") },
-  { id: 5, label: "Search", icon: Search, action: () => toast.info("Search section coming soon!") },
+  { id: 1, label: "Home", icon: Home, action: () => window.location.href = "/" },
+  { id: 2, label: "Search", icon: Search, action: () => toast.info("Search coming soon!") },
+  { id: 3, label: "Upload", icon: Upload, action: () => toast.info("Upload coming soon!") },
+  { id: 4, label: "Profile", icon: UserCircle, action: () => toast.info("Profile coming soon!") },
 ];
 
 const BottomMenu = ({ isOpen, onClose }: BottomMenuProps) => {
   return (
     <div className="fixed bottom-0 left-0 w-full z-50 bg-background border-t">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-5 gap-1">
+        <div className="grid grid-cols-4 gap-1">
           {menuItems.map((item) => (
             <button
               key={item.id}
