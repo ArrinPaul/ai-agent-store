@@ -2,6 +2,7 @@
 import { Search, Upload, UserCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Link, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +14,7 @@ import {
 
 const Navigation = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,17 +22,26 @@ const Navigation = () => {
   };
 
   const handleUpload = () => {
-    toast.info("Upload feature coming soon!");
+    navigate('/apps');
   };
 
   const handleProfile = (action: string) => {
-    toast.info(`${action} coming soon!`);
+    switch (action) {
+      case "Profile settings":
+        navigate('/profile');
+        break;
+      case "My uploads":
+        navigate('/apps');
+        break;
+      default:
+        toast.info(`${action} coming soon!`);
+    }
   };
 
   return (
     <nav className="glass-effect fixed top-0 w-full z-50 border-b">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="text-2xl font-bold">AI Store</div>
+        <Link to="/" className="text-2xl font-bold">AI Store</Link>
         
         <div className="flex items-center space-x-6">
           <form onSubmit={handleSearch} className="relative">

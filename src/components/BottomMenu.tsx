@@ -1,5 +1,6 @@
 
 import { Home, Search, Upload, UserCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface BottomMenuProps {
@@ -7,14 +8,36 @@ interface BottomMenuProps {
   onClose: () => void;
 }
 
-const menuItems = [
-  { id: 1, label: "Home", icon: Home, action: () => window.location.href = "/" },
-  { id: 2, label: "Search", icon: Search, action: () => toast.info("Search coming soon!") },
-  { id: 3, label: "Upload", icon: Upload, action: () => toast.info("Upload coming soon!") },
-  { id: 4, label: "Profile", icon: UserCircle, action: () => toast.info("Profile coming soon!") },
-];
-
 const BottomMenu = ({ isOpen, onClose }: BottomMenuProps) => {
+  const navigate = useNavigate();
+
+  const menuItems = [
+    { 
+      id: 1, 
+      label: "Home", 
+      icon: Home, 
+      action: () => navigate("/") 
+    },
+    { 
+      id: 2, 
+      label: "Search", 
+      icon: Search, 
+      action: () => toast.info("Search coming soon!") 
+    },
+    { 
+      id: 3, 
+      label: "Upload", 
+      icon: Upload, 
+      action: () => navigate("/apps") 
+    },
+    { 
+      id: 4, 
+      label: "Profile", 
+      icon: UserCircle, 
+      action: () => navigate("/profile") 
+    },
+  ];
+
   return (
     <div className="fixed bottom-0 left-0 w-full z-50 bg-background border-t">
       <div className="container mx-auto px-4">
