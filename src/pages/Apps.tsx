@@ -4,19 +4,30 @@ import BottomMenu from "@/components/BottomMenu";
 import AgentCard from "@/components/AgentCard";
 import { useState } from "react";
 
-const myApps = [
+interface App {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  image_url: string;
+  downloads: number;
+}
+
+const myApps: App[] = [
   {
+    id: "1",
     name: "Personal Writing Assistant",
     description: "Your personal AI writing companion that helps improve your writing style.",
     category: "Productivity",
-    imageUrl: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80",
+    image_url: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80",
     downloads: 127,
   },
   {
+    id: "2",
     name: "Code Review Bot",
     description: "AI-powered code review assistant that helps maintain code quality.",
     category: "Development",
-    imageUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+    image_url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
     downloads: 89,
   },
 ];
@@ -38,7 +49,15 @@ const Apps = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {myApps.map((app) => (
-              <AgentCard key={app.name} {...app} />
+              <AgentCard
+                key={app.id}
+                id={app.id}
+                name={app.name}
+                description={app.description}
+                category={app.category}
+                image_url={app.image_url}
+                downloads={app.downloads}
+              />
             ))}
           </div>
 
