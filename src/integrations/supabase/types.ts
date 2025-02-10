@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      apps: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          creator_id: string | null
+          description: string | null
+          downloads: number | null
+          featured: boolean | null
+          id: string
+          image_url: string | null
+          name: string
+          search_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          creator_id?: string | null
+          description?: string | null
+          downloads?: number | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          name: string
+          search_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          creator_id?: string | null
+          description?: string | null
+          downloads?: number | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          search_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

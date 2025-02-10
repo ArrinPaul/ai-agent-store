@@ -1,106 +1,80 @@
+
+import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import FeaturedAgent from "@/components/FeaturedAgent";
 import AgentCard from "@/components/AgentCard";
 import BottomMenu from "@/components/BottomMenu";
-import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const agents = [
-  {
-    name: "Writing Assistant",
-    description: "Enhance your writing with AI-powered suggestions and improvements.",
-    category: "Productivity",
-    imageUrl: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80",
-    downloads: 1234,
-  },
-  {
-    name: "Code Companion",
-    description: "Your AI pair programmer that helps you write better code faster.",
-    category: "Development",
-    imageUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
-    downloads: 2345,
-  },
-  {
-    name: "Design Assistant",
-    description: "Create beautiful designs with AI-powered suggestions and templates.",
-    category: "Design",
-    imageUrl: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80",
-    downloads: 3456,
-  },
-  {
-    name: "Research Helper",
-    description: "Accelerate your research with AI-powered insights and analysis.",
-    category: "Education",
-    imageUrl: "https://images.unsplash.com/photo-1483058712412-4245e9b90334?auto=format&fit=crop&w=800&q=80",
-    downloads: 4567,
-  },
-];
-
-const mostSearched = [
-  {
-    name: "AI Writing Tool",
-    description: "A tool to help you write better and faster.",
-    category: "Productivity",
-    imageUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80",
-    downloads: 5000,
-  },
-  {
-    name: "AI Code Helper",
-    description: "Get coding assistance with AI.",
-    category: "Development",
-    imageUrl: "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?auto=format&fit=crop&w=800&q=80",
-    downloads: 3000,
-  },
-  {
-    name: "AI Design Assistant",
-    description: "Design with the help of AI.",
-    category: "Design",
-    imageUrl: "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?auto=format&fit=crop&w=800&q=80",
-    downloads: 2000,
-  },
-  {
-    name: "AI Research Assistant",
-    description: "Research made easy with AI.",
-    category: "Education",
-    imageUrl: "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?auto=format&fit=crop&w=800&q=80",
-    downloads: 1500,
-  },
-];
-
-const topDownloaded = agents.sort((a, b) => (b.downloads || 0) - (a.downloads || 0)).slice(0, 4);
-
-const featuredApps = [
-  {
-    name: "Super AI Assistant",
-    description: "The most advanced AI assistant for all your needs.",
-    category: "Productivity",
-    imageUrl: "https://images.unsplash.com/photo-1535378917042-10a22c95931a?auto=format&fit=crop&w=800&q=80",
-    downloads: 10000,
-  },
-  {
-    name: "AI Music Generator",
-    description: "Create music with the help of AI.",
-    category: "Music",
-    imageUrl: "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?auto=format&fit=crop&w=800&q=80",
-    downloads: 8000,
-  },
-  {
-    name: "AI Video Editor",
-    description: "Edit videos effortlessly with AI.",
-    category: "Video",
-    imageUrl: "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?auto=format&fit=crop&w=800&q=80",
-    downloads: 6000,
-  },
-  {
-    name: "AI Chatbot",
-    description: "Engage with users using AI chatbots.",
-    category: "Chat",
-    imageUrl: "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?auto=format&fit=crop&w=800&q=80",
-    downloads: 4000,
-  },
-];
+interface App {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  image_url: string;
+  downloads: number;
+  search_count: number;
+  featured: boolean;
+}
 
 const Index = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
+  const [mostSearched, setMostSearched] = useState<App[]>([]);
+  const [topDownloaded, setTopDownloaded] = useState<App[]>([]);
+  const [featuredApps, setFeaturedApps] = useState<App[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApps = async () => {
+      try {
+        // Fetch most searched apps
+        const { data: searchedData, error: searchError } = await supabase
+          .from("apps")
+          .select("*")
+          .order("search_count", { ascending: false })
+          .limit(4);
+
+        if (searchError) throw searchError;
+        setMostSearched(searchedData || []);
+
+        // Fetch top downloaded apps
+        const { data: downloadedData, error: downloadError } = await supabase
+          .from("apps")
+          .select("*")
+          .order("downloads", { ascending: false })
+          .limit(4);
+
+        if (downloadError) throw downloadError;
+        setTopDownloaded(downloadedData || []);
+
+        // Fetch featured apps
+        const { data: featuredData, error: featuredError } = await supabase
+          .from("apps")
+          .select("*")
+          .eq("featured", true)
+          .limit(4);
+
+        if (featuredError) throw featuredError;
+        setFeaturedApps(featuredData || []);
+      } catch (error: any) {
+        console.error("Error fetching apps:", error);
+        toast.error("Failed to load apps");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchApps();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-xl">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -134,27 +108,42 @@ const Index = () => {
           <div className="mt-16">
             <h2 className="text-2xl font-bold mb-8">Most Searched This Week</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {mostSearched.map((agent) => (
-                <AgentCard key={agent.name} {...agent} />
+              {mostSearched.map((app) => (
+                <AgentCard key={app.id} {...app} />
               ))}
+              {mostSearched.length === 0 && (
+                <p className="col-span-full text-center text-muted-foreground">
+                  No apps found
+                </p>
+              )}
             </div>
           </div>
 
           <div className="mt-16">
             <h2 className="text-2xl font-bold mb-8">Top Downloaded</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {topDownloaded.map((agent) => (
-                <AgentCard key={agent.name} {...agent} />
+              {topDownloaded.map((app) => (
+                <AgentCard key={app.id} {...app} />
               ))}
+              {topDownloaded.length === 0 && (
+                <p className="col-span-full text-center text-muted-foreground">
+                  No apps found
+                </p>
+              )}
             </div>
           </div>
 
           <div className="mt-16">
             <h2 className="text-2xl font-bold mb-8">Featured Apps</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredApps.map((agent) => (
-                <AgentCard key={agent.name} {...agent} />
+              {featuredApps.map((app) => (
+                <AgentCard key={app.id} {...app} />
               ))}
+              {featuredApps.length === 0 && (
+                <p className="col-span-full text-center text-muted-foreground">
+                  No featured apps found
+                </p>
+              )}
             </div>
           </div>
         </div>

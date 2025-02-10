@@ -2,25 +2,32 @@
 import { Download } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AgentCardProps {
+  id: string;
   name: string;
   description: string;
   category: string;
-  imageUrl: string;
+  image_url: string;
   downloads?: number;
 }
 
-const AgentCard = ({ name, description, category, imageUrl, downloads = 0 }: AgentCardProps) => {
+const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }: AgentCardProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      // Simulate download delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase
+        .from("apps")
+        .update({ downloads: (downloads || 0) + 1 })
+        .eq("id", id);
+
+      if (error) throw error;
       toast.success("Download started successfully!");
     } catch (error) {
+      console.error("Download error:", error);
       toast.error("Failed to start download");
     } finally {
       setIsDownloading(false);
@@ -31,7 +38,7 @@ const AgentCard = ({ name, description, category, imageUrl, downloads = 0 }: Age
     <div className="glass-effect rounded-xl overflow-hidden card-hover border transition-all duration-300 hover:shadow-lg">
       <div className="aspect-video w-full overflow-hidden">
         <img
-          src={imageUrl}
+          src={image_url}
           alt={name}
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
           loading="lazy"
