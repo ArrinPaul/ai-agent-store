@@ -3,6 +3,7 @@ import { Search, Upload, UserCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,13 +26,23 @@ const Navigation = () => {
     navigate('/apps');
   };
 
-  const handleProfile = (action: string) => {
+  const handleProfile = async (action: string) => {
     switch (action) {
       case "Profile settings":
         navigate('/profile');
         break;
       case "My uploads":
         navigate('/apps');
+        break;
+      case "Sign out":
+        try {
+          const { error } = await supabase.auth.signOut();
+          if (error) throw error;
+          navigate('/auth');
+          toast.success("Signed out successfully");
+        } catch (error: any) {
+          toast.error("Error signing out");
+        }
         break;
       default:
         toast.info(`${action} coming soon!`);
