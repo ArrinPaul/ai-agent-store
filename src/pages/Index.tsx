@@ -79,7 +79,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background pb-32">
       <Navigation />
-      <main className="pt-20">
+      <main className="pt-32 md:pt-20">
         <div className="container mx-auto px-4 py-8">
           <FeaturedAgent />
           

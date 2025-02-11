@@ -2,9 +2,10 @@
 import Navigation from "@/components/Navigation";
 import BottomMenu from "@/components/BottomMenu";
 import AgentCard from "@/components/AgentCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLocation } from "react-router-dom";
 
 interface App {
   id: string;
@@ -17,6 +18,10 @@ interface App {
 
 const Apps = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const searchQuery = searchParams.get("search");
+  const [searchResults, setSearchResults] = useState<App[]>([]);
 
   const { data: apps = [], isLoading } = useQuery({
     queryKey: ['apps'],
@@ -31,17 +36,37 @@ const Apps = () => {
     },
   });
 
+  useEffect(() => {
+    // If there's a search query, get results from localStorage
+    if (searchQuery) {
+      const results = localStorage.getItem("searchResults");
+      if (results) {
+        setSearchResults(JSON.parse(results));
+      }
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery]);
+
+  const displayedApps = searchQuery ? searchResults : apps;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <Navigation />
-      <main className="pt-20 pb-32">
+      <main className="pt-32 md:pt-20 pb-32">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-4xl font-bold">Apps</h1>
-              <p className="text-muted-foreground mt-1">Discover amazing applications</p>
+              <h1 className="text-3xl md:text-4xl font-bold">
+                {searchQuery ? "Search Results" : "Apps"}
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                {searchQuery
+                  ? `Showing results for "${searchQuery}"`
+                  : "Discover amazing applications"}
+              </p>
             </div>
-            <button className="px-6 py-3 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-opacity">
+            <button className="w-full md:w-auto px-6 py-3 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-opacity">
               Upload New App
             </button>
           </div>
@@ -54,9 +79,9 @@ const Apps = () => {
             </div>
           ) : (
             <>
-              {apps.length > 0 ? (
+              {displayedApps.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {apps.map((app) => (
+                  {displayedApps.map((app) => (
                     <AgentCard
                       key={app.id}
                       id={app.id}
@@ -70,7 +95,11 @@ const Apps = () => {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-xl text-muted-foreground">No apps available yet.</p>
+                  <p className="text-xl text-muted-foreground">
+                    {searchQuery
+                      ? "No results found for your search"
+                      : "No apps available yet."}
+                  </p>
                 </div>
               )}
             </>
