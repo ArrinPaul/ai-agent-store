@@ -88,8 +88,8 @@ const Navigation = () => {
   return (
     <nav className="glass-effect fixed top-0 w-full z-50 border-b">
       <div className="container mx-auto px-4 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <Link to="/" className="text-2xl font-bold">
               AI Store
             </Link>
@@ -103,28 +103,30 @@ const Navigation = () => {
             )}
           </div>
 
-          <div className={`flex-1 ${isSearchOpen || !isMobile ? "block" : "hidden"} md:flex md:items-center md:justify-end space-y-4 md:space-y-0 md:space-x-6`}>
-            <form onSubmit={handleSearch} className="relative flex-1 md:max-w-md">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search AI agents..."
-                className="w-full pl-10 pr-4 py-2 rounded-full bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/20 focus:outline-none"
-              />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-            </form>
+          <div className="flex items-center gap-4">
+            <div className={`${isSearchOpen || !isMobile ? "block" : "hidden"} md:block`}>
+              <form onSubmit={handleSearch} className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search AI agents..."
+                  className="w-full md:w-[300px] pl-10 pr-4 py-2 rounded-full bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                />
+                <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+              </form>
+            </div>
 
             <button
               onClick={handleUpload}
-              className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              className="hidden md:flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
             >
               <Upload className="h-4 w-4" />
               Upload Agent
             </button>
 
             <DropdownMenu>
-              <DropdownMenuTrigger className="hover:opacity-80 transition-opacity ml-auto md:ml-0">
+              <DropdownMenuTrigger className="hover:opacity-80 transition-opacity">
                 <UserCircle className="h-8 w-8" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
