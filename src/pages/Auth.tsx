@@ -11,25 +11,61 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
 
+  const validateEmail = (email: string) => {
+    return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate email format
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    // Validate password
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
     setLoading(true);
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: window.location.origin,
+          },
         });
+
         if (error) throw error;
-        toast.success("Check your email to confirm your account!");
+
+        if (data.user?.identities?.length === 0) {
+          toast.error("This email is already registered. Please sign in instead.");
+          setIsSignUp(false);
+        } else {
+          toast.success("Check your email to confirm your account!");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
-        navigate("/");
+
+        if (error) {
+          if (error.message === "Invalid login credentials") {
+            toast.error("Invalid email or password. Please try again or sign up if you're new.");
+          } else {
+            throw error;
+          }
+        } else {
+          toast.success("Successfully signed in!");
+          navigate("/");
+        }
       }
     } catch (error: any) {
       toast.error(error.message);
@@ -54,8 +90,9 @@ const Auth = () => {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.trim())}
               className="w-full px-4 py-2 rounded-lg bg-secondary/50 border focus:ring-2 focus:ring-primary/20"
+              placeholder="your@email.com"
               required
             />
           </div>
@@ -70,6 +107,7 @@ const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-2 rounded-lg bg-secondary/50 border focus:ring-2 focus:ring-primary/20"
+              placeholder="Min. 6 characters"
               required
             />
           </div>
