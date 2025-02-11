@@ -1,5 +1,5 @@
 
-import { Home, Search, Upload, UserCircle } from "lucide-react";
+import { Home, Layout, Upload, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -20,9 +20,9 @@ const BottomMenu = ({ isOpen, onClose }: BottomMenuProps) => {
     },
     { 
       id: 2, 
-      label: "Search", 
-      icon: Search, 
-      action: () => toast.info("Search coming soon!") 
+      label: "Apps", 
+      icon: Layout, 
+      action: () => navigate("/apps") 
     },
     { 
       id: 3, 
