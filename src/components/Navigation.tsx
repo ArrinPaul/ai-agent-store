@@ -1,5 +1,5 @@
 
-import { Search, Upload, UserCircle } from "lucide-react";
+import { Upload, UserCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
@@ -15,46 +15,8 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Navigation = () => {
-  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) {
-      toast.error("Please enter a search term");
-      return;
-    }
-
-    try {
-      const { data: searchResults, error } = await supabase
-        .from("apps")
-        .select("*")
-        .ilike("name", `%${searchQuery}%`)
-        .order("downloads", { ascending: false });
-
-      if (error) throw error;
-
-      // Update search count for found apps
-      if (searchResults && searchResults.length > 0) {
-        await Promise.all(
-          searchResults.map((app) =>
-            supabase
-              .from("apps")
-              .update({ search_count: (app.search_count || 0) + 1 })
-              .eq("id", app.id)
-          )
-        );
-      }
-
-      // Store search results in localStorage
-      localStorage.setItem("searchResults", JSON.stringify(searchResults));
-      navigate("/apps?search=" + encodeURIComponent(searchQuery));
-    } catch (error) {
-      console.error("Search error:", error);
-      toast.error("Failed to perform search");
-    }
-  };
 
   const handleUpload = () => {
     navigate("/apps");
@@ -93,19 +55,6 @@ const Navigation = () => {
           </Link>
 
           <div className="flex items-center gap-4">
-            <div className="block">
-              <form onSubmit={handleSearch} className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search AI agents..."
-                  className="w-full md:w-[300px] pl-10 pr-4 py-2 rounded-full bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/20 focus:outline-none"
-                />
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-              </form>
-            </div>
-
             <button
               onClick={handleUpload}
               className="hidden md:flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
