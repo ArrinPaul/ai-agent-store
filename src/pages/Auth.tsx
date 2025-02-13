@@ -7,13 +7,64 @@ import { toast } from "sonner";
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isOtpVerification, setIsOtpVerification] = useState(false);
   const navigate = useNavigate();
 
   const validateEmail = (email: string) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+  };
+
+  const handleLoginAttempt = async (email: string) => {
+    const { data, error } = await supabase
+      .from('login_attempts')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking login attempts:', error);
+      return null;
+    }
+
+    if (!data) {
+      // First attempt
+      const { error: insertError } = await supabase
+        .from('login_attempts')
+        .insert([{ email }]);
+      
+      if (insertError) console.error('Error creating login attempt:', insertError);
+      return 1;
+    }
+
+    // Update attempt count
+    const newCount = (data.attempt_count || 0) + 1;
+    const { error: updateError } = await supabase
+      .from('login_attempts')
+      .update({ 
+        attempt_count: newCount,
+        last_attempt: new Date().toISOString(),
+        is_locked: newCount >= 5
+      })
+      .eq('email', email);
+
+    if (updateError) console.error('Error updating login attempts:', updateError);
+    return newCount;
+  };
+
+  const resetLoginAttempts = async (email: string) => {
+    const { error } = await supabase
+      .from('login_attempts')
+      .update({ 
+        attempt_count: 0,
+        is_locked: false
+      })
+      .eq('email', email);
+
+    if (error) console.error('Error resetting login attempts:', error);
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -42,16 +93,29 @@ const Auth = () => {
     }
   };
 
+  const sendOtpEmail = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?otp=true`,
+      });
+      
+      if (error) throw error;
+      
+      setIsOtpVerification(true);
+      toast.success("OTP sent to your email!");
+    } catch (error: any) {
+      toast.error("Error sending OTP: " + error.message);
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate email format
     if (!validateEmail(email)) {
       toast.error("Please enter a valid email address");
       return;
     }
 
-    // Validate password
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters long");
       return;
@@ -78,6 +142,16 @@ const Auth = () => {
           toast.success("Check your email to confirm your account!");
         }
       } else {
+        // Check login attempts before proceeding
+        const attemptCount = await handleLoginAttempt(email);
+        
+        if (attemptCount >= 5) {
+          await sendOtpEmail(email);
+          setIsOtpVerification(true);
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -85,11 +159,12 @@ const Auth = () => {
 
         if (error) {
           if (error.message === "Invalid login credentials") {
-            toast.error("Invalid email or password. Please try again or sign up if you're new.");
+            toast.error(`Invalid email or password. ${5 - attemptCount} attempts remaining.`);
           } else {
             throw error;
           }
         } else {
+          await resetLoginAttempts(email);
           toast.success("Successfully signed in!");
           navigate("/");
         }
@@ -103,6 +178,46 @@ const Auth = () => {
 
   // Show the main form content based on the current mode
   const renderForm = () => {
+    if (isOtpVerification) {
+      return (
+        <form onSubmit={handleResetPassword} className="space-y-6">
+          <div>
+            <label htmlFor="otp" className="block text-sm font-medium mb-2">
+              Enter OTP from Email
+            </label>
+            <input
+              id="otp"
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.trim())}
+              className="w-full px-4 py-2 rounded-lg bg-secondary/50 border focus:ring-2 focus:ring-primary/20"
+              placeholder="Enter OTP"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {loading ? "Verifying..." : "Verify OTP"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsOtpVerification(false);
+              setOtp("");
+            }}
+            className="w-full text-center mt-4 text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            Back to Sign In
+          </button>
+        </form>
+      );
+    }
+
     if (isForgotPassword) {
       return (
         <form onSubmit={handleResetPassword} className="space-y-6">
@@ -205,11 +320,13 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8 glass-effect rounded-xl">
         <h1 className="text-3xl font-bold text-center mb-8">
-          {isForgotPassword 
-            ? "Reset Password"
-            : isSignUp 
-              ? "Create Account" 
-              : "Welcome Back"}
+          {isOtpVerification 
+            ? "Enter OTP"
+            : isForgotPassword 
+              ? "Reset Password"
+              : isSignUp 
+                ? "Create Account" 
+                : "Welcome Back"}
         </h1>
         
         {renderForm()}

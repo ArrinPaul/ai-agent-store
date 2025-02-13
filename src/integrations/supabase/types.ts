@@ -51,6 +51,36 @@ export type Database = {
         }
         Relationships: []
       }
+      login_attempts: {
+        Row: {
+          attempt_count: number | null
+          created_at: string | null
+          email: string
+          id: string
+          is_locked: boolean | null
+          last_attempt: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attempt_count?: number | null
+          created_at?: string | null
+          email: string
+          id?: string
+          is_locked?: boolean | null
+          last_attempt?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attempt_count?: number | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_locked?: boolean | null
+          last_attempt?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
