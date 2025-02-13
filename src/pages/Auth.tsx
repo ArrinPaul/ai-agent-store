@@ -23,9 +23,9 @@ const Auth = () => {
       .from('login_attempts')
       .select('*')
       .eq('email', email)
-      .single();
+      .maybeSingle(); // Changed from .single() to .maybeSingle()
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error('Error checking login attempts:', error);
       return null;
     }
