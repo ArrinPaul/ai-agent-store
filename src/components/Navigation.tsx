@@ -16,7 +16,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const Navigation = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -89,22 +88,12 @@ const Navigation = () => {
     <nav className="glass-effect fixed top-0 w-full z-50 border-b">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-2xl font-bold">
-              AI Store
-            </Link>
-            {isMobile && (
-              <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="md:hidden"
-              >
-                <Search className="h-6 w-6" />
-              </button>
-            )}
-          </div>
+          <Link to="/" className="text-2xl font-bold">
+            AI Store
+          </Link>
 
           <div className="flex items-center gap-4">
-            <div className={`${isSearchOpen || !isMobile ? "block" : "hidden"} md:block`}>
+            <div className="block">
               <form onSubmit={handleSearch} className="relative">
                 <input
                   type="text"
