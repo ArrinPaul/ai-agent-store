@@ -2,10 +2,21 @@
 import Navigation from "@/components/Navigation";
 import BottomMenu from "@/components/BottomMenu";
 import AgentCard from "@/components/AgentCard";
+import SearchBar from "@/components/SearchBar";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
+import { Filter, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface App {
   id: string;
@@ -16,12 +27,15 @@ interface App {
   downloads: number;
 }
 
+const categories = ["All", "Chatbots", "Image Generation", "Data Analysis", "Productivity", "Entertainment"];
+
 const Apps = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get("search");
   const [searchResults, setSearchResults] = useState<App[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const { data: apps = [], isLoading } = useQuery({
     queryKey: ['apps'],
@@ -48,27 +62,59 @@ const Apps = () => {
     }
   }, [searchQuery]);
 
-  const displayedApps = searchQuery ? searchResults : apps;
+  // Filter apps by selected category
+  const filteredApps = selectedCategory === "All" 
+    ? (searchQuery ? searchResults : apps)
+    : (searchQuery ? searchResults : apps).filter(app => app.category === selectedCategory);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <Navigation />
-      <main className="pt-32 md:pt-20 pb-32">
+      <main className="pt-32 md:pt-24 pb-32">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold">
-                {searchQuery ? "Search Results" : "Apps"}
+              <h1 className="text-3xl md:text-4xl font-bold animate-fade-in">
+                {searchQuery ? "Search Results" : "Browse Agents"}
               </h1>
               <p className="text-muted-foreground mt-1">
                 {searchQuery
                   ? `Showing results for "${searchQuery}"`
-                  : "Discover amazing applications"}
+                  : "Discover amazing AI applications"}
               </p>
             </div>
-            <button className="w-full md:w-auto px-6 py-3 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-opacity">
-              Upload New App
-            </button>
+            <div className="flex flex-col md:flex-row gap-4">
+              <SearchBar className="md:w-64" />
+              
+              <div className="flex gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="gap-2">
+                      <Filter className="h-4 w-4" />
+                      Filter
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuLabel>Categories</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {categories.map(category => (
+                      <DropdownMenuItem 
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        className={category === selectedCategory ? "bg-secondary" : ""}
+                      >
+                        {category}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                <Button className="w-full md:w-auto gap-2">
+                  <Plus className="h-4 w-4" />
+                  Upload Agent
+                </Button>
+              </div>
+            </div>
           </div>
 
           {isLoading ? (
@@ -79,9 +125,9 @@ const Apps = () => {
             </div>
           ) : (
             <>
-              {displayedApps.length > 0 ? (
+              {filteredApps.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {displayedApps.map((app) => (
+                  {filteredApps.map((app) => (
                     <AgentCard
                       key={app.id}
                       id={app.id}
