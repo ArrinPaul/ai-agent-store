@@ -34,7 +34,7 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
         
         if (error) throw error;
         
-        const favorites = data.favorites || [];
+        const favorites = data.favorites as string[] || [];
         setIsFavorite(favorites.includes(id));
       } catch (error) {
         console.error("Error checking favorites:", error);
@@ -81,7 +81,7 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
       if (error) throw error;
       
       // Update favorites array
-      const favorites = data.favorites || [];
+      const favorites = data.favorites as string[] || [];
       const updatedFavorites = isFavorite
         ? favorites.filter((favId: string) => favId !== id)
         : [...favorites, id];

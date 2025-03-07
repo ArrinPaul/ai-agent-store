@@ -30,10 +30,13 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
       // Update search_count for matching apps
       if (data.length > 0) {
         const ids = data.map((app) => app.id);
-        await supabase
-          .from("apps")
-          .update({ search_count: supabase.rpc("increment", { inc: 1 }) })
-          .in("id", ids);
+        // Use an update query for each app
+        for (const appId of ids) {
+          await supabase
+            .from("apps")
+            .update({ search_count: supabase.rpc("increment", { inc: 1 }) })
+            .eq("id", appId);
+        }
       }
       
       // Navigate to apps page with search query
