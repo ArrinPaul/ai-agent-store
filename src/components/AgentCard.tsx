@@ -1,10 +1,11 @@
 
-import { Download, Heart } from "lucide-react";
+import { Download, Heart, Eye, Share2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface AgentCardProps {
   id: string;
@@ -18,6 +19,7 @@ interface AgentCardProps {
 const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }: AgentCardProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const { session } = useAuth();
   
   // Check if agent is in user's favorites on load
@@ -56,10 +58,15 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
       if (error) throw error;
 
       toast.success("Download started successfully!");
+      
+      // Simulate download delay for better UX
+      setTimeout(() => {
+        setIsDownloading(false);
+        toast.success(`${name} has been added to your agents!`);
+      }, 1500);
     } catch (error) {
       console.error("Download error:", error);
       toast.error("Failed to start download");
-    } finally {
       setIsDownloading(false);
     }
   };
@@ -102,13 +109,33 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
     }
   };
 
+  const handleQuickView = () => {
+    toast.info(`Quick preview of ${name} coming soon!`);
+  };
+
+  const handleShare = () => {
+    // Copy link to clipboard
+    navigator.clipboard.writeText(`https://example.com/agent/${id}`).then(
+      () => toast.success("Link copied to clipboard!"),
+      () => toast.error("Failed to copy link")
+    );
+  };
+
   return (
-    <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30 backdrop-blur-lg shadow-lg transition-all duration-300 hover:scale-[1.02] fade-in">
+    <div 
+      className={cn(
+        "rounded-2xl overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30 backdrop-blur-lg shadow-lg transition-all duration-300 fade-in relative",
+        isHovered ? "scale-[1.03] shadow-xl" : "scale-100"
+      )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="aspect-[4/3] w-full overflow-hidden relative">
         <img
           src={image_url}
           alt={name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-300"
+          style={{ transform: isHovered ? 'scale(1.05)' : 'scale(1)' }}
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -118,33 +145,65 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
           </span>
           <h3 className="text-xl font-bold mt-2">{name}</h3>
         </div>
-        <button
-          onClick={toggleFavorite}
-          className="absolute top-4 right-4 p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors"
-          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-        >
-          <Heart 
-            className={cn(
-              "h-5 w-5", 
-              isFavorite ? "fill-red-500 text-red-500" : "text-white"
-            )} 
-          />
-        </button>
+        
+        {/* Action buttons */}
+        <div className="absolute top-4 right-4 flex flex-col space-y-2">
+          <button
+            onClick={toggleFavorite}
+            className="p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors"
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          >
+            <Heart 
+              className={cn(
+                "h-5 w-5", 
+                isFavorite ? "fill-red-500 text-red-500" : "text-white"
+              )} 
+            />
+          </button>
+          
+          <button
+            onClick={handleQuickView}
+            className="p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors"
+            aria-label="Quick view"
+          >
+            <Eye className="h-5 w-5 text-white" />
+          </button>
+          
+          <button
+            onClick={handleShare}
+            className="p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors"
+            aria-label="Share"
+          >
+            <Share2 className="h-5 w-5 text-white" />
+          </button>
+        </div>
       </div>
+      
       <div className="p-4">
         <p className="text-sm text-muted-foreground line-clamp-2">
           {description}
         </p>
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{downloads} downloads</span>
-          <button
+          <span className="text-sm text-muted-foreground">{downloads.toLocaleString()} downloads</span>
+          <Button
             onClick={handleDownload}
             disabled={isDownloading}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+            variant="default"
+            size="sm"
           >
-            <Download className="h-4 w-4" />
-            {isDownloading ? "Getting..." : "Get"}
-          </button>
+            {isDownloading ? (
+              <>
+                <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                Getting...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Get
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </div>
