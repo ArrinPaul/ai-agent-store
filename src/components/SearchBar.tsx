@@ -34,7 +34,7 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
         for (const appId of ids) {
           await supabase
             .from("apps")
-            .update({ search_count: supabase.rpc("increment", { inc: 1 }) })
+            .update({ search_count: 1 }) // Using a direct value instead of RPC
             .eq("id", appId);
         }
       }

@@ -36,17 +36,20 @@ const Profile = () => {
   const { data: favoriteApps = [], isLoading: favoritesLoading } = useQuery({
     queryKey: ['favoriteApps', profile?.favorites],
     queryFn: async () => {
-      if (!profile?.favorites || !profile.favorites.length) return [];
+      if (!profile?.favorites) return [];
+      
+      const favoritesArray = profile.favorites as string[] || [];
+      if (favoritesArray.length === 0) return [];
       
       const { data, error } = await supabase
         .from('apps')
         .select('*')
-        .in('id', profile.favorites);
+        .in('id', favoritesArray);
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!profile?.favorites && profile.favorites.length > 0,
+    enabled: !!profile?.favorites && Array.isArray(profile.favorites) && (profile.favorites as string[]).length > 0,
   });
 
   // Fetch user's uploaded apps
