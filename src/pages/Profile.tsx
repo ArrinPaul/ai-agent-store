@@ -8,10 +8,15 @@ import { useQuery } from "@tanstack/react-query";
 import AgentCard from "@/components/AgentCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { PlusCircle, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Profile = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const { session } = useAuth();
+  const navigate = useNavigate();
   const userId = session?.user?.id;
   const userEmail = session?.user?.email;
 
@@ -69,6 +74,11 @@ const Profile = () => {
     enabled: !!userId,
   });
 
+  const handleUploadClick = () => {
+    navigate('/apps');
+    toast.info("Upload feature coming soon!");
+  };
+
   return (
     <div className="min-h-screen bg-background pb-32">
       <Navigation />
@@ -80,7 +90,7 @@ const Profile = () => {
             <div className="space-y-6">
               <div className="flex items-center space-x-4">
                 <div className="h-20 w-20 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-2xl">👤</span>
+                  <User className="h-10 w-10 text-primary/70" />
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold">
@@ -137,8 +147,11 @@ const Profile = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">You haven't favorited any agents yet.</p>
+                    <div className="text-center py-12 bg-secondary/10 rounded-xl">
+                      <p className="text-muted-foreground mb-4">You haven't favorited any agents yet.</p>
+                      <Button variant="outline" onClick={() => navigate('/')}>
+                        Discover Agents
+                      </Button>
                     </div>
                   )}
                 </TabsContent>
@@ -165,8 +178,12 @@ const Profile = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">You haven't uploaded any agents yet.</p>
+                    <div className="text-center py-12 bg-secondary/10 rounded-xl">
+                      <p className="text-muted-foreground mb-4">You haven't uploaded any agents yet.</p>
+                      <Button onClick={handleUploadClick} className="flex items-center gap-2">
+                        <PlusCircle className="h-4 w-4" />
+                        Upload Agent
+                      </Button>
                     </div>
                   )}
                 </TabsContent>
