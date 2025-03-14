@@ -18,6 +18,8 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 60 * 1000, // 1 minute
+      retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -30,7 +32,7 @@ function App() {
           <AuthProvider>
             <TooltipProvider>
               <Toaster />
-              <Sonner />
+              <Sonner position="top-right" closeButton />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route
@@ -51,6 +53,14 @@ function App() {
                 />
                 <Route
                   path="/apps"
+                  element={
+                    <PrivateRoute>
+                      <Apps />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/apps/bookmarks"
                   element={
                     <PrivateRoute>
                       <Apps />

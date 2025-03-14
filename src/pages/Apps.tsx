@@ -1,3 +1,4 @@
+
 import Navigation from "@/components/Navigation";
 import BottomMenu from "@/components/BottomMenu";
 import AgentCard from "@/components/AgentCard";
@@ -6,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
-import { Filter, Plus, ArrowLeft, ArrowRight } from "lucide-react";
+import { Filter, Plus, ArrowLeft, ArrowRight, ArrowUpDown, Bookmark, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,6 +16,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import {
   Pagination,
@@ -34,6 +37,9 @@ import {
 } from "@/components/ui/carousel";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/contexts/AuthContext";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface App {
   id: string;
@@ -42,6 +48,9 @@ interface App {
   category: string;
   image_url: string;
   downloads: number;
+  rating?: number;
+  created_at?: string;
+  bookmarked?: boolean;
 }
 
 const sampleApps: App[] = [
@@ -51,7 +60,9 @@ const sampleApps: App[] = [
     description: "Advanced AI for coding help and pair programming. Perfect for developers of all skill levels.",
     category: "Productivity",
     image_url: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070&auto=format&fit=crop",
-    downloads: 18432
+    downloads: 18432,
+    rating: 4.8,
+    created_at: "2023-09-15T14:23:45Z"
   },
   {
     id: "sample-2",
@@ -59,7 +70,9 @@ const sampleApps: App[] = [
     description: "Generate stunning, high-quality images from text prompts with advanced style controls.",
     category: "Image Generation",
     image_url: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop",
-    downloads: 24567
+    downloads: 24567,
+    rating: 4.9,
+    created_at: "2023-10-05T09:12:30Z"
   },
   {
     id: "sample-3",
@@ -67,7 +80,9 @@ const sampleApps: App[] = [
     description: "Analyze complex datasets and create beautiful visualizations with simple prompts.",
     category: "Data Analysis",
     image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop",
-    downloads: 12890
+    downloads: 12890,
+    rating: 4.5,
+    created_at: "2023-08-20T16:45:22Z"
   },
   {
     id: "sample-4",
@@ -75,7 +90,9 @@ const sampleApps: App[] = [
     description: "Create immersive stories, characters, and dialogue for your next creative project.",
     category: "Entertainment",
     image_url: "https://images.unsplash.com/photo-1468273519810-8bbe53d3c9a0?q=80&w=2052&auto=format&fit=crop",
-    downloads: 9876
+    downloads: 9876,
+    rating: 4.3,
+    created_at: "2023-11-10T11:33:21Z"
   },
   {
     id: "sample-5",
@@ -83,7 +100,9 @@ const sampleApps: App[] = [
     description: "Advanced conversational AI that remembers context and adapts to your communication style.",
     category: "Chatbots",
     image_url: "https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?q=80&w=2074&auto=format&fit=crop",
-    downloads: 31452
+    downloads: 31452,
+    rating: 4.7,
+    created_at: "2023-06-28T08:45:19Z"
   },
   {
     id: "sample-6",
@@ -91,7 +110,9 @@ const sampleApps: App[] = [
     description: "Generate beautiful slide decks and presentations with simple text prompts.",
     category: "Productivity",
     image_url: "https://images.unsplash.com/photo-1607970669494-54652c9e579c?q=80&w=2070&auto=format&fit=crop",
-    downloads: 8745
+    downloads: 8745,
+    rating: 4.2,
+    created_at: "2023-12-05T14:22:33Z"
   },
   {
     id: "sample-7",
@@ -99,7 +120,9 @@ const sampleApps: App[] = [
     description: "Turn your imagination into beautiful artwork with this AI-powered painting assistant.",
     category: "Image Generation",
     image_url: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?q=80&w=2009&auto=format&fit=crop",
-    downloads: 15789
+    downloads: 15789,
+    rating: 4.6,
+    created_at: "2023-07-17T09:11:45Z"
   },
   {
     id: "sample-8",
@@ -107,7 +130,9 @@ const sampleApps: App[] = [
     description: "Create compelling marketing copy, slogans, and campaign ideas for your business.",
     category: "Productivity",
     image_url: "https://images.unsplash.com/photo-1533750349088-cd871a92f312?q=80&w=2070&auto=format&fit=crop",
-    downloads: 7854
+    downloads: 7854,
+    rating: 4.1,
+    created_at: "2023-11-23T15:48:22Z"
   },
   {
     id: "sample-9",
@@ -115,20 +140,58 @@ const sampleApps: App[] = [
     description: "Generate original music compositions and melodies based on your mood and preferences.",
     category: "Entertainment",
     image_url: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=2070&auto=format&fit=crop",
-    downloads: 13456
+    downloads: 13456,
+    rating: 4.4,
+    created_at: "2023-10-12T10:33:29Z"
+  },
+  {
+    id: "sample-10",
+    name: "Study Buddy",
+    description: "Your personal AI tutor for any subject, helps with homework and exam preparation.",
+    category: "Education",
+    image_url: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=2070&auto=format&fit=crop",
+    downloads: 19243,
+    rating: 4.8,
+    created_at: "2023-09-01T13:27:55Z"
+  },
+  {
+    id: "sample-11",
+    name: "Travel Assistant",
+    description: "Plan your perfect vacation with AI-powered itineraries, recommendations, and local insights.",
+    category: "Travel",
+    image_url: "https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=2070&auto=format&fit=crop",
+    downloads: 11578,
+    rating: 4.5,
+    created_at: "2023-08-03T14:12:33Z"
+  },
+  {
+    id: "sample-12",
+    name: "Health Coach",
+    description: "Personalized fitness plans, nutrition advice, and wellness tracking in one AI assistant.",
+    category: "Health",
+    image_url: "https://images.unsplash.com/photo-1511367461989-f85a21fda167?q=80&w=2070&auto=format&fit=crop",
+    downloads: 22456,
+    rating: 4.7,
+    created_at: "2023-07-22T08:33:19Z"
   }
 ];
 
-const categories = ["All", "Chatbots", "Image Generation", "Data Analysis", "Productivity", "Entertainment"];
+const categories = ["All", "Chatbots", "Image Generation", "Data Analysis", "Productivity", "Entertainment", "Education", "Travel", "Health"];
+
+type SortOption = "popular" | "newest" | "highest-rated";
 
 const Apps = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const location = useLocation();
+  const { session } = useAuth();
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get("search");
   const [searchResults, setSearchResults] = useState<App[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortOption, setSortOption] = useState<SortOption>("popular");
+  const [bookmarkedApps, setBookmarkedApps] = useState<string[]>([]);
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const itemsPerPage = 6;
 
   const { data: apps = [], isLoading } = useQuery({
@@ -160,13 +223,58 @@ const Apps = () => {
     }
   }, [searchQuery]);
 
-  const filteredApps = selectedCategory === "All" 
-    ? (searchQuery ? searchResults : apps)
-    : (searchQuery ? searchResults : apps).filter(app => app.category === selectedCategory);
+  // Fetch bookmarked apps
+  useEffect(() => {
+    const fetchBookmarks = async () => {
+      if (!session?.user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("bookmarks")
+          .eq("id", session.user.id)
+          .single();
+          
+        if (error) throw error;
+        
+        if (data && data.bookmarks) {
+          setBookmarkedApps(data.bookmarks);
+        }
+      } catch (error) {
+        console.error("Error fetching bookmarks:", error);
+      }
+    };
+    
+    fetchBookmarks();
+  }, [session?.user]);
 
-  const totalPages = Math.ceil(filteredApps.length / itemsPerPage);
+  // Apply bookmarks to apps
+  const appsWithBookmarks = apps.map(app => ({
+    ...app,
+    bookmarked: bookmarkedApps.includes(app.id)
+  }));
+
+  const filteredApps = (searchQuery ? searchResults : appsWithBookmarks)
+    .filter(app => selectedCategory === "All" || app.category === selectedCategory)
+    .filter(app => ratingFilter === null || (app.rating && app.rating >= ratingFilter));
+
+  // Apply sorting
+  const sortedApps = [...filteredApps].sort((a, b) => {
+    switch (sortOption) {
+      case "popular":
+        return b.downloads - a.downloads;
+      case "newest":
+        return new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime();
+      case "highest-rated":
+        return (b.rating || 0) - (a.rating || 0);
+      default:
+        return 0;
+    }
+  });
+
+  const totalPages = Math.ceil(sortedApps.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedApps = filteredApps.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedApps = sortedApps.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -174,6 +282,38 @@ const Apps = () => {
   };
 
   const featuredApps = [...apps].sort(() => 0.5 - Math.random()).slice(0, 10);
+  
+  const toggleBookmark = async (appId: string) => {
+    if (!session?.user) {
+      toast.error("Please log in to bookmark agents");
+      return;
+    }
+    
+    const isBookmarked = bookmarkedApps.includes(appId);
+    const updatedBookmarks = isBookmarked
+      ? bookmarkedApps.filter(id => id !== appId)
+      : [...bookmarkedApps, appId];
+    
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ bookmarks: updatedBookmarks })
+        .eq("id", session.user.id);
+        
+      if (error) throw error;
+      
+      setBookmarkedApps(updatedBookmarks);
+      toast.success(isBookmarked ? "Removed from bookmarks" : "Added to bookmarks");
+    } catch (error) {
+      console.error("Error updating bookmarks:", error);
+      toast.error("Failed to update bookmarks");
+    }
+  };
+
+  const filterByRating = (rating: number | null) => {
+    setRatingFilter(rating);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
@@ -195,6 +335,7 @@ const Apps = () => {
               <SearchBar className="md:w-64" />
               
               <div className="flex gap-2">
+                {/* Category filter */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="gap-2">
@@ -217,8 +358,50 @@ const Apps = () => {
                         {category}
                       </DropdownMenuItem>
                     ))}
+                    
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Rating</DropdownMenuLabel>
+                    {[4, 3, 0, null].map((rating) => (
+                      <DropdownMenuItem 
+                        key={rating === null ? "all" : rating}
+                        onClick={() => filterByRating(rating)}
+                        className={rating === ratingFilter ? "bg-secondary" : ""}
+                      >
+                        {rating === null ? "All Ratings" : `${rating}+ Stars`}
+                      </DropdownMenuItem>
+                    ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+                
+                {/* Sort options */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="gap-2">
+                      <ArrowUpDown className="h-4 w-4" />
+                      Sort
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuRadioGroup value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
+                      <DropdownMenuRadioItem value="popular">Most Popular</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="newest">Newest First</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="highest-rated">Highest Rated</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                {/* Bookmarked toggle */}
+                <Button 
+                  variant={selectedCategory === "bookmarked" ? "default" : "outline"} 
+                  className="gap-2"
+                  onClick={() => {
+                    setSelectedCategory(selectedCategory === "bookmarked" ? "All" : "bookmarked");
+                    setCurrentPage(1);
+                  }}
+                >
+                  <Bookmark className={`h-4 w-4 ${selectedCategory === "bookmarked" ? "fill-primary-foreground" : ""}`} />
+                  {selectedCategory === "bookmarked" ? "All Agents" : "Bookmarked"}
+                </Button>
                 
                 <Button className="w-full md:w-auto gap-2">
                   <Plus className="h-4 w-4" />
@@ -254,9 +437,17 @@ const Apps = () => {
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80" />
                               <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                                <span className="text-xs font-medium bg-primary/30 backdrop-blur-sm px-2 py-1 rounded-full">
-                                  {app.category}
-                                </span>
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-xs font-medium bg-primary/30 backdrop-blur-sm px-2 py-1 rounded-full">
+                                    {app.category}
+                                  </span>
+                                  {app.rating && (
+                                    <span className="flex items-center text-xs bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full">
+                                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
+                                      {app.rating.toFixed(1)}
+                                    </span>
+                                  )}
+                                </div>
                                 <h3 className="text-xl font-bold mt-2">{app.name}</h3>
                                 <p className="text-sm text-white/80 line-clamp-2 mt-1">{app.description}</p>
                               </div>
@@ -269,6 +460,16 @@ const Apps = () => {
                   <CarouselPrevious className="left-2 bg-black/50 hover:bg-black/70 text-white border-none" />
                   <CarouselNext className="right-2 bg-black/50 hover:bg-black/70 text-white border-none" />
                 </Carousel>
+                
+                {/* Carousel indicators */}
+                <div className="flex justify-center mt-4 gap-1">
+                  {[...Array(Math.min(5, Math.ceil(featuredApps.length / 3)))].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-1 w-6 rounded-full bg-muted transition-colors"
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -281,7 +482,67 @@ const Apps = () => {
             </div>
           ) : (
             <>
-              {filteredApps.length > 0 ? (
+              {/* Active filters */}
+              {(selectedCategory !== "All" || ratingFilter !== null || sortOption !== "popular") && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {selectedCategory !== "All" && (
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      Category: {selectedCategory}
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-4 w-4 ml-1 p-0 hover:bg-transparent" 
+                        onClick={() => setSelectedCategory("All")}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  )}
+                  
+                  {ratingFilter !== null && (
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      Rating: {ratingFilter}+ stars
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-4 w-4 ml-1 p-0 hover:bg-transparent" 
+                        onClick={() => setRatingFilter(null)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  )}
+                  
+                  {sortOption !== "popular" && (
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      Sort: {sortOption === "newest" ? "Newest" : "Highest Rated"}
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-4 w-4 ml-1 p-0 hover:bg-transparent" 
+                        onClick={() => setSortOption("popular")}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  )}
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-xs"
+                    onClick={() => {
+                      setSelectedCategory("All");
+                      setRatingFilter(null);
+                      setSortOption("popular");
+                    }}
+                  >
+                    Clear all filters
+                  </Button>
+                </div>
+              )}
+            
+              {sortedApps.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {paginatedApps.map((app) => (
@@ -354,7 +615,9 @@ const Apps = () => {
                   <p className="text-xl text-muted-foreground">
                     {searchQuery
                       ? "No results found for your search"
-                      : "No apps available yet."}
+                      : selectedCategory === "bookmarked"
+                      ? "You haven't bookmarked any agents yet"
+                      : "No agents match your current filters"}
                   </p>
                 </div>
               )}

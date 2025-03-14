@@ -1,5 +1,5 @@
 
-import { Download, Heart, Eye, Share2 } from "lucide-react";
+import { Download, Heart, Eye, Share2, Bookmark, Star } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,11 +15,23 @@ interface AgentCardProps {
   category: string;
   image_url: string;
   downloads?: number;
+  rating?: number;
+  bookmarked?: boolean;
 }
 
-const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }: AgentCardProps) => {
+const AgentCard = ({ 
+  id, 
+  name, 
+  description, 
+  category, 
+  image_url, 
+  downloads = 0, 
+  rating,
+  bookmarked = false 
+}: AgentCardProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(bookmarked);
   const [isHovered, setIsHovered] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const { session } = useAuth();
@@ -46,7 +58,8 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
     };
     
     checkIfFavorite();
-  }, [id, session?.user]);
+    setIsBookmarked(bookmarked);
+  }, [id, session?.user, bookmarked]);
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -111,6 +124,44 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
     }
   };
 
+  const toggleBookmark = async () => {
+    if (!session?.user) {
+      toast.error("You must be logged in to bookmark agents");
+      return;
+    }
+    
+    try {
+      // Get current bookmarks
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("bookmarks")
+        .eq("id", session.user.id)
+        .single();
+      
+      if (error) throw error;
+      
+      // Update bookmarks array
+      const bookmarks = data.bookmarks as string[] || [];
+      const updatedBookmarks = isBookmarked
+        ? bookmarks.filter((bookmarkId: string) => bookmarkId !== id)
+        : [...bookmarks, id];
+      
+      // Save updated bookmarks
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ bookmarks: updatedBookmarks })
+        .eq("id", session.user.id);
+      
+      if (updateError) throw updateError;
+      
+      setIsBookmarked(!isBookmarked);
+      toast.success(isBookmarked ? "Removed from bookmarks" : "Saved to bookmarks");
+    } catch (error) {
+      console.error("Error updating bookmarks:", error);
+      toast.error("Failed to update bookmarks");
+    }
+  };
+
   const handleQuickView = () => {
     setShowPreview(true);
   };
@@ -151,9 +202,17 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
           <div className="absolute bottom-4 left-4 right-4 text-white">
-            <span className="text-xs font-medium bg-primary/20 px-2 py-1 rounded-full backdrop-blur-sm">
-              {category}
-            </span>
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-medium bg-primary/20 px-2 py-1 rounded-full backdrop-blur-sm">
+                {category}
+              </span>
+              {rating && (
+                <span className="flex items-center text-xs bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full">
+                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
+                  {rating.toFixed(1)}
+                </span>
+              )}
+            </div>
             <h3 className="text-xl font-bold mt-2">{name}</h3>
           </div>
           
@@ -168,6 +227,19 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
                 className={cn(
                   "h-5 w-5", 
                   isFavorite ? "fill-red-500 text-red-500" : "text-white"
+                )} 
+              />
+            </button>
+            
+            <button
+              onClick={toggleBookmark}
+              className="p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors"
+              aria-label={isBookmarked ? "Remove from bookmarks" : "Save to bookmarks"}
+            >
+              <Bookmark 
+                className={cn(
+                  "h-5 w-5", 
+                  isBookmarked ? "fill-primary text-primary" : "text-white"
                 )} 
               />
             </button>
