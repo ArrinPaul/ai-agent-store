@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
-import { Filter, Plus, ArrowLeft, ArrowRight, ArrowUpDown, Bookmark, Star } from "lucide-react";
+import { Filter, Plus, X, ArrowUpDown, Bookmark, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -36,7 +36,6 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -193,6 +192,7 @@ const Apps = () => {
   const [bookmarkedApps, setBookmarkedApps] = useState<string[]>([]);
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const itemsPerPage = 6;
+  const isBookmarksPage = location.pathname === "/apps/bookmarks";
 
   const { data: apps = [], isLoading } = useQuery({
     queryKey: ['apps'],
@@ -256,7 +256,8 @@ const Apps = () => {
 
   const filteredApps = (searchQuery ? searchResults : appsWithBookmarks)
     .filter(app => selectedCategory === "All" || app.category === selectedCategory)
-    .filter(app => ratingFilter === null || (app.rating && app.rating >= ratingFilter));
+    .filter(app => ratingFilter === null || (app.rating && app.rating >= ratingFilter))
+    .filter(app => isBookmarksPage ? bookmarkedApps.includes(app.id) : true);
 
   // Apply sorting
   const sortedApps = [...filteredApps].sort((a, b) => {
@@ -323,12 +324,18 @@ const Apps = () => {
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold animate-fade-in">
-                {searchQuery ? "Search Results" : "Browse Agents"}
+                {searchQuery 
+                  ? "Search Results" 
+                  : isBookmarksPage 
+                    ? "Your Bookmarks" 
+                    : "Browse Agents"}
               </h1>
               <p className="text-muted-foreground mt-1">
                 {searchQuery
                   ? `Showing results for "${searchQuery}"`
-                  : "Discover amazing AI applications"}
+                  : isBookmarksPage
+                    ? "Manage your saved agents" 
+                    : "Discover amazing AI applications"}
               </p>
             </div>
             <div className="flex flex-col md:flex-row gap-4">
@@ -392,15 +399,14 @@ const Apps = () => {
                 
                 {/* Bookmarked toggle */}
                 <Button 
-                  variant={selectedCategory === "bookmarked" ? "default" : "outline"} 
+                  variant={isBookmarksPage ? "default" : "outline"} 
                   className="gap-2"
                   onClick={() => {
-                    setSelectedCategory(selectedCategory === "bookmarked" ? "All" : "bookmarked");
-                    setCurrentPage(1);
+                    window.location.href = isBookmarksPage ? "/apps" : "/apps/bookmarks";
                   }}
                 >
-                  <Bookmark className={`h-4 w-4 ${selectedCategory === "bookmarked" ? "fill-primary-foreground" : ""}`} />
-                  {selectedCategory === "bookmarked" ? "All Agents" : "Bookmarked"}
+                  <Bookmark className={`h-4 w-4 ${isBookmarksPage ? "fill-primary-foreground" : ""}`} />
+                  {isBookmarksPage ? "All Agents" : "Bookmarked"}
                 </Button>
                 
                 <Button className="w-full md:w-auto gap-2">
@@ -411,7 +417,7 @@ const Apps = () => {
             </div>
           </div>
 
-          {!searchQuery && !isLoading && (
+          {!searchQuery && !isBookmarksPage && !isLoading && (
             <div className="mb-12">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold">Featured Collections</h2>
@@ -554,6 +560,8 @@ const Apps = () => {
                         category={app.category}
                         image_url={app.image_url}
                         downloads={app.downloads}
+                        rating={app.rating}
+                        bookmarked={app.bookmarked}
                       />
                     ))}
                   </div>
@@ -615,7 +623,7 @@ const Apps = () => {
                   <p className="text-xl text-muted-foreground">
                     {searchQuery
                       ? "No results found for your search"
-                      : selectedCategory === "bookmarked"
+                      : isBookmarksPage
                       ? "You haven't bookmarked any agents yet"
                       : "No agents match your current filters"}
                   </p>

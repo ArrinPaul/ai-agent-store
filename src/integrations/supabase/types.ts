@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      app_reviews: {
+        Row: {
+          app_id: string | null
+          comment: string | null
+          created_at: string | null
+          helpful_count: number | null
+          id: string
+          rating: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_id?: string | null
+          comment?: string | null
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          rating?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_id?: string | null
+          comment?: string | null
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          rating?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_reviews_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apps: {
         Row: {
           category: string | null
@@ -20,6 +61,7 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          rating: number | null
           search_count: number | null
           updated_at: string | null
         }
@@ -33,6 +75,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          rating?: number | null
           search_count?: number | null
           updated_at?: string | null
         }
@@ -46,6 +89,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          rating?: number | null
           search_count?: number | null
           updated_at?: string | null
         }
@@ -84,6 +128,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bookmarks: Json | null
           created_at: string
           favorites: Json | null
           id: string
@@ -91,6 +136,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bookmarks?: Json | null
           created_at?: string
           favorites?: Json | null
           id: string
@@ -98,6 +144,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bookmarks?: Json | null
           created_at?: string
           favorites?: Json | null
           id?: string
