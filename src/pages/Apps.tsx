@@ -17,6 +17,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface App {
   id: string;
@@ -27,6 +36,82 @@ interface App {
   downloads: number;
 }
 
+// Sample app data to use if not enough apps are returned from database
+const sampleApps: App[] = [
+  {
+    id: "sample-1",
+    name: "Code Assistant Pro",
+    description: "Advanced AI for coding help and pair programming. Perfect for developers of all skill levels.",
+    category: "Productivity",
+    image_url: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070&auto=format&fit=crop",
+    downloads: 18432
+  },
+  {
+    id: "sample-2",
+    name: "Pixel Perfect",
+    description: "Generate stunning, high-quality images from text prompts with advanced style controls.",
+    category: "Image Generation",
+    image_url: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop",
+    downloads: 24567
+  },
+  {
+    id: "sample-3",
+    name: "Data Wizard",
+    description: "Analyze complex datasets and create beautiful visualizations with simple prompts.",
+    category: "Data Analysis",
+    image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop",
+    downloads: 12890
+  },
+  {
+    id: "sample-4",
+    name: "Story Weaver",
+    description: "Create immersive stories, characters, and dialogue for your next creative project.",
+    category: "Entertainment",
+    image_url: "https://images.unsplash.com/photo-1468273519810-8bbe53d3c9a0?q=80&w=2052&auto=format&fit=crop",
+    downloads: 9876
+  },
+  {
+    id: "sample-5",
+    name: "ChatMaster",
+    description: "Advanced conversational AI that remembers context and adapts to your communication style.",
+    category: "Chatbots",
+    image_url: "https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?q=80&w=2074&auto=format&fit=crop",
+    downloads: 31452
+  },
+  {
+    id: "sample-6",
+    name: "Presentation Pro",
+    description: "Generate beautiful slide decks and presentations with simple text prompts.",
+    category: "Productivity",
+    image_url: "https://images.unsplash.com/photo-1607970669494-54652c9e579c?q=80&w=2070&auto=format&fit=crop",
+    downloads: 8745
+  },
+  {
+    id: "sample-7",
+    name: "Dream Canvas",
+    description: "Turn your imagination into beautiful artwork with this AI-powered painting assistant.",
+    category: "Image Generation",
+    image_url: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?q=80&w=2009&auto=format&fit=crop",
+    downloads: 15789
+  },
+  {
+    id: "sample-8",
+    name: "Marketing Genius",
+    description: "Create compelling marketing copy, slogans, and campaign ideas for your business.",
+    category: "Productivity",
+    image_url: "https://images.unsplash.com/photo-1533750349088-cd871a92f312?q=80&w=2070&auto=format&fit=crop",
+    downloads: 7854
+  },
+  {
+    id: "sample-9",
+    name: "MusicMind",
+    description: "Generate original music compositions and melodies based on your mood and preferences.",
+    category: "Entertainment",
+    image_url: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=2070&auto=format&fit=crop",
+    downloads: 13456
+  }
+];
+
 const categories = ["All", "Chatbots", "Image Generation", "Data Analysis", "Productivity", "Entertainment"];
 
 const Apps = () => {
@@ -36,6 +121,8 @@ const Apps = () => {
   const searchQuery = searchParams.get("search");
   const [searchResults, setSearchResults] = useState<App[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   const { data: apps = [], isLoading } = useQuery({
     queryKey: ['apps'],
@@ -46,6 +133,12 @@ const Apps = () => {
         .order('downloads', { ascending: false });
       
       if (error) throw error;
+      
+      // If we have less than 3 apps, add sample apps to make the UI more interesting
+      if (!data || data.length < 3) {
+        return sampleApps;
+      }
+      
       return data || [];
     },
   });
@@ -66,6 +159,16 @@ const Apps = () => {
   const filteredApps = selectedCategory === "All" 
     ? (searchQuery ? searchResults : apps)
     : (searchQuery ? searchResults : apps).filter(app => app.category === selectedCategory);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredApps.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedApps = filteredApps.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
@@ -100,7 +203,10 @@ const Apps = () => {
                     {categories.map(category => (
                       <DropdownMenuItem 
                         key={category}
-                        onClick={() => setSelectedCategory(category)}
+                        onClick={() => {
+                          setSelectedCategory(category);
+                          setCurrentPage(1); // Reset to first page when changing category
+                        }}
                         className={category === selectedCategory ? "bg-secondary" : ""}
                       >
                         {category}
@@ -126,19 +232,76 @@ const Apps = () => {
           ) : (
             <>
               {filteredApps.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredApps.map((app) => (
-                    <AgentCard
-                      key={app.id}
-                      id={app.id}
-                      name={app.name}
-                      description={app.description}
-                      category={app.category}
-                      image_url={app.image_url}
-                      downloads={app.downloads}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {paginatedApps.map((app) => (
+                      <AgentCard
+                        key={app.id}
+                        id={app.id}
+                        name={app.name}
+                        description={app.description}
+                        category={app.category}
+                        image_url={app.image_url}
+                        downloads={app.downloads}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <Pagination className="mt-8">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        
+                        {[...Array(totalPages)].map((_, i) => {
+                          // Show first page, last page, and pages around current page
+                          if (
+                            i === 0 || 
+                            i === totalPages - 1 || 
+                            (i >= currentPage - 2 && i <= currentPage + 0)
+                          ) {
+                            return (
+                              <PaginationItem key={i}>
+                                <PaginationLink 
+                                  isActive={currentPage === i + 1}
+                                  onClick={() => handlePageChange(i + 1)}
+                                >
+                                  {i + 1}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          }
+                          
+                          // Show ellipsis if there's a gap
+                          if (
+                            (i === 1 && currentPage > 3) || 
+                            (i === totalPages - 2 && currentPage < totalPages - 2)
+                          ) {
+                            return (
+                              <PaginationItem key={i}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+                          
+                          return null;
+                        })}
+                        
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12">
                   <p className="text-xl text-muted-foreground">
