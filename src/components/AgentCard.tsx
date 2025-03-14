@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import AgentPreview from "./AgentPreview";
 
 interface AgentCardProps {
   id: string;
@@ -20,6 +21,7 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
   const [isDownloading, setIsDownloading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const { session } = useAuth();
   
   // Check if agent is in user's favorites on load
@@ -110,7 +112,7 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
   };
 
   const handleQuickView = () => {
-    toast.info(`Quick preview of ${name} coming soon!`);
+    setShowPreview(true);
   };
 
   const handleShare = () => {
@@ -122,91 +124,105 @@ const AgentCard = ({ id, name, description, category, image_url, downloads = 0 }
   };
 
   return (
-    <div 
-      className={cn(
-        "rounded-2xl overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30 backdrop-blur-lg shadow-lg transition-all duration-300 fade-in relative",
-        isHovered ? "scale-[1.03] shadow-xl" : "scale-100"
-      )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="aspect-[4/3] w-full overflow-hidden relative">
-        <img
-          src={image_url}
-          alt={name}
-          className="w-full h-full object-cover transition-transform duration-300"
-          style={{ transform: isHovered ? 'scale(1.05)' : 'scale(1)' }}
-          loading="lazy"
+    <>
+      <div 
+        className={cn(
+          "rounded-2xl overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30 backdrop-blur-lg shadow-lg transition-all duration-300 fade-in relative group",
+          isHovered ? "scale-[1.03] shadow-xl" : "scale-100"
+        )}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div 
+          className="absolute inset-0 bg-grid-white/5 opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ 
+            backgroundSize: "30px 30px", 
+            backgroundImage: "linear-gradient(to right, rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.1) 1px, transparent 1px)"
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <div className="absolute bottom-4 left-4 right-4 text-white">
-          <span className="text-xs font-medium bg-primary/20 px-2 py-1 rounded-full backdrop-blur-sm">
-            {category}
-          </span>
-          <h3 className="text-xl font-bold mt-2">{name}</h3>
+        
+        <div className="aspect-[4/3] w-full overflow-hidden relative">
+          <img
+            src={image_url}
+            alt={name}
+            className="w-full h-full object-cover transition-transform duration-300"
+            style={{ transform: isHovered ? 'scale(1.05)' : 'scale(1)' }}
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <div className="absolute bottom-4 left-4 right-4 text-white">
+            <span className="text-xs font-medium bg-primary/20 px-2 py-1 rounded-full backdrop-blur-sm">
+              {category}
+            </span>
+            <h3 className="text-xl font-bold mt-2">{name}</h3>
+          </div>
+          
+          {/* Action buttons */}
+          <div className="absolute top-4 right-4 flex flex-col space-y-2">
+            <button
+              onClick={toggleFavorite}
+              className="p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors"
+              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              <Heart 
+                className={cn(
+                  "h-5 w-5", 
+                  isFavorite ? "fill-red-500 text-red-500" : "text-white"
+                )} 
+              />
+            </button>
+            
+            <button
+              onClick={handleQuickView}
+              className="p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors"
+              aria-label="Quick view"
+            >
+              <Eye className="h-5 w-5 text-white" />
+            </button>
+            
+            <button
+              onClick={handleShare}
+              className="p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors"
+              aria-label="Share"
+            >
+              <Share2 className="h-5 w-5 text-white" />
+            </button>
+          </div>
         </div>
         
-        {/* Action buttons */}
-        <div className="absolute top-4 right-4 flex flex-col space-y-2">
-          <button
-            onClick={toggleFavorite}
-            className="p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors"
-            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          >
-            <Heart 
-              className={cn(
-                "h-5 w-5", 
-                isFavorite ? "fill-red-500 text-red-500" : "text-white"
-              )} 
-            />
-          </button>
-          
-          <button
-            onClick={handleQuickView}
-            className="p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors"
-            aria-label="Quick view"
-          >
-            <Eye className="h-5 w-5 text-white" />
-          </button>
-          
-          <button
-            onClick={handleShare}
-            className="p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors"
-            aria-label="Share"
-          >
-            <Share2 className="h-5 w-5 text-white" />
-          </button>
+        <div className="p-4">
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {description}
+          </p>
+          <div className="mt-4 flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">{downloads.toLocaleString()} downloads</span>
+            <Button
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              variant="default"
+              size="sm"
+            >
+              {isDownloading ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                  Getting...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Get
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
       
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground line-clamp-2">
-          {description}
-        </p>
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{downloads.toLocaleString()} downloads</span>
-          <Button
-            onClick={handleDownload}
-            disabled={isDownloading}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-            variant="default"
-            size="sm"
-          >
-            {isDownloading ? (
-              <>
-                <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                Getting...
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4" />
-                Get
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-    </div>
+      {showPreview && (
+        <AgentPreview agentId={id} onClose={() => setShowPreview(false)} />
+      )}
+    </>
   );
 };
 
