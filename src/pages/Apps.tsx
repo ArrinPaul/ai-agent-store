@@ -1,4 +1,3 @@
-
 import Navigation from "@/components/Navigation";
 import BottomMenu from "@/components/BottomMenu";
 import AgentCard from "@/components/AgentCard";
@@ -7,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
-import { Filter, Plus } from "lucide-react";
+import { Filter, Plus, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,6 +25,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface App {
   id: string;
@@ -36,7 +44,6 @@ interface App {
   downloads: number;
 }
 
-// Sample app data to use if not enough apps are returned from database
 const sampleApps: App[] = [
   {
     id: "sample-1",
@@ -134,7 +141,6 @@ const Apps = () => {
       
       if (error) throw error;
       
-      // If we have less than 3 apps, add sample apps to make the UI more interesting
       if (!data || data.length < 3) {
         return sampleApps;
       }
@@ -144,7 +150,6 @@ const Apps = () => {
   });
 
   useEffect(() => {
-    // If there's a search query, get results from localStorage
     if (searchQuery) {
       const results = localStorage.getItem("searchResults");
       if (results) {
@@ -155,12 +160,10 @@ const Apps = () => {
     }
   }, [searchQuery]);
 
-  // Filter apps by selected category
   const filteredApps = selectedCategory === "All" 
     ? (searchQuery ? searchResults : apps)
     : (searchQuery ? searchResults : apps).filter(app => app.category === selectedCategory);
 
-  // Calculate pagination
   const totalPages = Math.ceil(filteredApps.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedApps = filteredApps.slice(startIndex, startIndex + itemsPerPage);
@@ -169,6 +172,8 @@ const Apps = () => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const featuredApps = [...apps].sort(() => 0.5 - Math.random()).slice(0, 10);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
@@ -205,7 +210,7 @@ const Apps = () => {
                         key={category}
                         onClick={() => {
                           setSelectedCategory(category);
-                          setCurrentPage(1); // Reset to first page when changing category
+                          setCurrentPage(1);
                         }}
                         className={category === selectedCategory ? "bg-secondary" : ""}
                       >
@@ -222,6 +227,51 @@ const Apps = () => {
               </div>
             </div>
           </div>
+
+          {!searchQuery && !isLoading && (
+            <div className="mb-12">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">Featured Collections</h2>
+              </div>
+              <div className="relative">
+                <Carousel
+                  opts={{
+                    align: "start",
+                    loop: true,
+                  }}
+                  className="w-full"
+                >
+                  <CarouselContent className="-ml-4">
+                    {featuredApps.map((app) => (
+                      <CarouselItem key={app.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                        <div className="p-1">
+                          <Card className="overflow-hidden border-0 bg-transparent shadow-none hover:shadow-lg transition-all duration-300">
+                            <div className="aspect-[4/3] relative rounded-xl overflow-hidden group">
+                              <img 
+                                src={app.image_url} 
+                                alt={app.name}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80" />
+                              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                                <span className="text-xs font-medium bg-primary/30 backdrop-blur-sm px-2 py-1 rounded-full">
+                                  {app.category}
+                                </span>
+                                <h3 className="text-xl font-bold mt-2">{app.name}</h3>
+                                <p className="text-sm text-white/80 line-clamp-2 mt-1">{app.description}</p>
+                              </div>
+                            </div>
+                          </Card>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-2 bg-black/50 hover:bg-black/70 text-white border-none" />
+                  <CarouselNext className="right-2 bg-black/50 hover:bg-black/70 text-white border-none" />
+                </Carousel>
+              </div>
+            </div>
+          )}
 
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -247,7 +297,6 @@ const Apps = () => {
                     ))}
                   </div>
                   
-                  {/* Pagination */}
                   {totalPages > 1 && (
                     <Pagination className="mt-8">
                       <PaginationContent>
@@ -259,7 +308,6 @@ const Apps = () => {
                         </PaginationItem>
                         
                         {[...Array(totalPages)].map((_, i) => {
-                          // Show first page, last page, and pages around current page
                           if (
                             i === 0 || 
                             i === totalPages - 1 || 
@@ -277,7 +325,6 @@ const Apps = () => {
                             );
                           }
                           
-                          // Show ellipsis if there's a gap
                           if (
                             (i === 1 && currentPage > 3) || 
                             (i === totalPages - 2 && currentPage < totalPages - 2)
