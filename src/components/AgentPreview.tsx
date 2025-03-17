@@ -115,11 +115,12 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
         if (reviewError) throw reviewError;
         
         if (reviewData && reviewData.length > 0) {
-          // Transform the data to match the Review interface by adding username if missing
+          // Transform the review data to match the Review interface
+          // The key fix: Don't try to access review.username directly, since it doesn't exist in the database
           const formattedReviews: Review[] = reviewData.map(review => ({
             ...review,
-            // Use email prefix or user_id substring as username if not provided
-            username: review.username || (review.user_id ? review.user_id.substring(0, 8) : "Anonymous")
+            // Add username derived from user_id since it's not in the database schema
+            username: review.user_id ? review.user_id.substring(0, 8) : "Anonymous"
           }));
           setReviews(formattedReviews);
         } else {
@@ -249,7 +250,6 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
           .insert({
             app_id: agentId,
             user_id: session.user.id,
-            username: username,
             rating,
             comment,
             created_at: new Date().toISOString(),
