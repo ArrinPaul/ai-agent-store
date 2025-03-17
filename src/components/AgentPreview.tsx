@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { X, Star, Download, Share2, ChevronLeft, ChevronRight, Info, MessageSquare, Filter, Clock, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
@@ -17,7 +18,7 @@ interface AgentPreviewProps {
 interface Review {
   id: string;
   user_id: string;
-  username: string;
+  username?: string; // Make username optional since it might not exist in the database
   rating: number;
   comment: string;
   created_at: string;
@@ -117,7 +118,7 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
           // Transform the data to match the Review interface by adding username if missing
           const formattedReviews: Review[] = reviewData.map(review => ({
             ...review,
-            // Use email prefix as username if not provided
+            // Use email prefix or user_id substring as username if not provided
             username: review.username || (review.user_id ? review.user_id.substring(0, 8) : "Anonymous")
           }));
           setReviews(formattedReviews);
@@ -226,6 +227,7 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
         .eq("user_id", session.user.id)
         .single();
       
+      // Generate a username from the user's email
       const username = session.user.email?.split('@')[0] || "User";
         
       if (existingReview) {
