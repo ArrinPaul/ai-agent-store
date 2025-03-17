@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { X, Star, Download, Share2, ChevronLeft, ChevronRight, Info, MessageSquare, Filter, Clock, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
@@ -115,7 +114,13 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
         if (reviewError) throw reviewError;
         
         if (reviewData && reviewData.length > 0) {
-          setReviews(reviewData);
+          // Transform the data to match the Review interface by adding username if missing
+          const formattedReviews: Review[] = reviewData.map(review => ({
+            ...review,
+            // Use email prefix as username if not provided
+            username: review.username || (review.user_id ? review.user_id.substring(0, 8) : "Anonymous")
+          }));
+          setReviews(formattedReviews);
         } else {
           // Use mock reviews if no real ones exist
           setReviews(mockReviews);
@@ -220,6 +225,8 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
         .eq("app_id", agentId)
         .eq("user_id", session.user.id)
         .single();
+      
+      const username = session.user.email?.split('@')[0] || "User";
         
       if (existingReview) {
         // Update existing review
@@ -240,7 +247,7 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
           .insert({
             app_id: agentId,
             user_id: session.user.id,
-            username: session.user.email?.split('@')[0] || "User",
+            username: username,
             rating,
             comment,
             created_at: new Date().toISOString(),
@@ -253,7 +260,7 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
         const newReview: Review = {
           id: Date.now().toString(),
           user_id: session.user.id,
-          username: session.user.email?.split('@')[0] || "User",
+          username: username,
           rating,
           comment,
           created_at: new Date().toISOString(),

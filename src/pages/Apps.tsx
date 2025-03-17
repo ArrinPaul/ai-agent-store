@@ -1,4 +1,3 @@
-
 import Navigation from "@/components/Navigation";
 import BottomMenu from "@/components/BottomMenu";
 import AgentCard from "@/components/AgentCard";
@@ -223,7 +222,6 @@ const Apps = () => {
     }
   }, [searchQuery]);
 
-  // Fetch bookmarked apps
   useEffect(() => {
     const fetchBookmarks = async () => {
       if (!session?.user) return;
@@ -238,7 +236,23 @@ const Apps = () => {
         if (error) throw error;
         
         if (data && data.bookmarks) {
-          setBookmarkedApps(data.bookmarks);
+          let bookmarks: string[] = [];
+          
+          if (Array.isArray(data.bookmarks)) {
+            bookmarks = data.bookmarks.map(item => String(item));
+          } else if (typeof data.bookmarks === 'string') {
+            try {
+              const parsed = JSON.parse(data.bookmarks);
+              if (Array.isArray(parsed)) {
+                bookmarks = parsed.map(item => String(item));
+              }
+            } catch (e) {
+              console.error("Error parsing bookmarks:", e);
+              bookmarks = [];
+            }
+          }
+          
+          setBookmarkedApps(bookmarks);
         }
       } catch (error) {
         console.error("Error fetching bookmarks:", error);
@@ -248,7 +262,6 @@ const Apps = () => {
     fetchBookmarks();
   }, [session?.user]);
 
-  // Apply bookmarks to apps
   const appsWithBookmarks = apps.map(app => ({
     ...app,
     bookmarked: bookmarkedApps.includes(app.id)
@@ -259,7 +272,6 @@ const Apps = () => {
     .filter(app => ratingFilter === null || (app.rating && app.rating >= ratingFilter))
     .filter(app => isBookmarksPage ? bookmarkedApps.includes(app.id) : true);
 
-  // Apply sorting
   const sortedApps = [...filteredApps].sort((a, b) => {
     switch (sortOption) {
       case "popular":
@@ -342,7 +354,6 @@ const Apps = () => {
               <SearchBar className="md:w-64" />
               
               <div className="flex gap-2">
-                {/* Category filter */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="gap-2">
@@ -380,7 +391,6 @@ const Apps = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
                 
-                {/* Sort options */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="gap-2">
@@ -397,7 +407,6 @@ const Apps = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
                 
-                {/* Bookmarked toggle */}
                 <Button 
                   variant={isBookmarksPage ? "default" : "outline"} 
                   className="gap-2"
@@ -467,7 +476,6 @@ const Apps = () => {
                   <CarouselNext className="right-2 bg-black/50 hover:bg-black/70 text-white border-none" />
                 </Carousel>
                 
-                {/* Carousel indicators */}
                 <div className="flex justify-center mt-4 gap-1">
                   {[...Array(Math.min(5, Math.ceil(featuredApps.length / 3)))].map((_, i) => (
                     <div
@@ -488,7 +496,6 @@ const Apps = () => {
             </div>
           ) : (
             <>
-              {/* Active filters */}
               {(selectedCategory !== "All" || ratingFilter !== null || sortOption !== "popular") && (
                 <div className="flex flex-wrap gap-2 mb-4">
                   {selectedCategory !== "All" && (
