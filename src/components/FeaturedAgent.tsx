@@ -63,7 +63,7 @@ const FeaturedAgent = () => {
 
   if (isLoading) {
     return (
-      <div className="relative h-[500px] w-full overflow-hidden rounded-3xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 animate-pulse">
+      <div className="relative h-[500px] w-full overflow-hidden rounded-3xl bg-gradient-to-r from-primary/10 to-secondary/20 animate-pulse">
         <div className="absolute inset-0 bg-grid-white/10" />
       </div>
     );
@@ -72,7 +72,7 @@ const FeaturedAgent = () => {
   return (
     <>
       <div 
-        className="relative h-[500px] w-full overflow-hidden rounded-3xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 animate-fadeIn transition-all duration-300"
+        className="relative h-[500px] w-full overflow-hidden rounded-3xl bg-gradient-to-br from-background to-secondary/30 animate-fadeIn transition-all duration-300"
         style={{ 
           transform: isHovered ? 'scale(1.01)' : 'scale(1)',
           boxShadow: isHovered ? '0 10px 40px rgba(0, 0, 0, 0.1)' : 'none' 
@@ -91,7 +91,7 @@ const FeaturedAgent = () => {
         
         {featuredAgent && (
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent dark:from-black/80 dark:via-black/50" />
             
             {/* Featured Badge - Animated on hover */}
             <div 
@@ -108,15 +108,15 @@ const FeaturedAgent = () => {
             {/* Main content */}
             <div className="absolute bottom-0 left-0 right-0 p-8">
               <div className="flex flex-wrap items-center gap-4 mb-4">
-                <div className="flex items-center gap-2 bg-black/30 text-white px-3 py-1 rounded-full backdrop-blur-sm">
+                <div className="flex items-center gap-2 bg-black/40 text-white px-3 py-1 rounded-full backdrop-blur-sm dark:bg-white/10">
                   <Star className="h-4 w-4 text-yellow-400" />
                   <span>4.8</span>
                 </div>
-                <div className="flex items-center gap-2 bg-black/30 text-white px-3 py-1 rounded-full backdrop-blur-sm">
+                <div className="flex items-center gap-2 bg-black/40 text-white px-3 py-1 rounded-full backdrop-blur-sm dark:bg-white/10">
                   <Users className="h-4 w-4" />
                   <span>{featuredAgent.downloads.toLocaleString()} users</span>
                 </div>
-                <div className="flex items-center gap-2 bg-black/30 text-white px-3 py-1 rounded-full backdrop-blur-sm">
+                <div className="flex items-center gap-2 bg-black/40 text-white px-3 py-1 rounded-full backdrop-blur-sm dark:bg-white/10">
                   <Check className="h-4 w-4 text-green-400" />
                   <span>Verified</span>
                 </div>
@@ -151,7 +151,7 @@ const FeaturedAgent = () => {
               )}
               
               {userRating && (
-                <div className="flex items-center gap-2 mb-6 bg-black/30 text-white px-3 py-1 rounded-full backdrop-blur-sm inline-block">
+                <div className="flex items-center gap-2 mb-6 bg-black/40 text-white px-3 py-1 rounded-full backdrop-blur-sm inline-block dark:bg-white/10">
                   <span>Your rating:</span>
                   <div className="flex">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -176,7 +176,7 @@ const FeaturedAgent = () => {
                 
                 <Button
                   variant="outline"
-                  className="flex items-center gap-2 px-8 py-6 rounded-full bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 transition-all hover:scale-105"
+                  className="flex items-center gap-2 px-8 py-6 rounded-full bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 transition-all hover:scale-105 dark:bg-black/40 dark:hover:bg-black/60"
                   size="lg"
                   onClick={handleShowVideo}
                 >
@@ -186,7 +186,7 @@ const FeaturedAgent = () => {
                 
                 <Button
                   variant="outline"
-                  className="flex items-center gap-2 px-8 py-6 rounded-full bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 transition-all hover:scale-105"
+                  className="flex items-center gap-2 px-8 py-6 rounded-full bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 transition-all hover:scale-105 dark:bg-black/40 dark:hover:bg-black/60"
                   size="lg"
                   onClick={handleAddToFavorites}
                 >
