@@ -10,6 +10,7 @@ import PrivateRoute from "@/components/PrivateRoute";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Apps from "./pages/Apps";
+import AppPreview from "./pages/AppPreview";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -64,6 +65,14 @@ function App() {
                   element={
                     <PrivateRoute>
                       <Apps />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/apps/:appId"
+                  element={
+                    <PrivateRoute>
+                      <AppPreview />
                     </PrivateRoute>
                   }
                 />

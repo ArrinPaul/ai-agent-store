@@ -1,6 +1,6 @@
-
 import { Download, Heart, Eye, Share2, Bookmark, Star } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +29,7 @@ const AgentCard = ({
   rating,
   bookmarked = false 
 }: AgentCardProps) => {
+  const navigate = useNavigate();
   const [isDownloading, setIsDownloading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(bookmarked);
@@ -36,7 +37,6 @@ const AgentCard = ({
   const [showPreview, setShowPreview] = useState(false);
   const { session } = useAuth();
   
-  // Check if agent is in user's favorites on load
   useEffect(() => {
     const checkIfFavorite = async () => {
       if (!session?.user) return;
@@ -61,10 +61,10 @@ const AgentCard = ({
     setIsBookmarked(bookmarked);
   }, [id, session?.user, bookmarked]);
 
-  const handleDownload = async () => {
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsDownloading(true);
     try {
-      // Update downloads count in Supabase
       const { error } = await supabase
         .from("apps")
         .update({ downloads: (downloads || 0) + 1 })
@@ -74,7 +74,6 @@ const AgentCard = ({
 
       toast.success("Download started successfully!");
       
-      // Simulate download delay for better UX
       setTimeout(() => {
         setIsDownloading(false);
         toast.success(`${name} has been added to your agents!`);
@@ -86,14 +85,14 @@ const AgentCard = ({
     }
   };
 
-  const toggleFavorite = async () => {
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!session?.user) {
       toast.error("You must be logged in to favorite agents");
       return;
     }
     
     try {
-      // Get current favorites
       const { data, error } = await supabase
         .from("profiles")
         .select("favorites")
@@ -102,13 +101,11 @@ const AgentCard = ({
       
       if (error) throw error;
       
-      // Update favorites array
       const favorites = data.favorites as string[] || [];
       const updatedFavorites = isFavorite
         ? favorites.filter((favId: string) => favId !== id)
         : [...favorites, id];
       
-      // Save updated favorites
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ favorites: updatedFavorites })
@@ -124,14 +121,14 @@ const AgentCard = ({
     }
   };
 
-  const toggleBookmark = async () => {
+  const toggleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!session?.user) {
       toast.error("You must be logged in to bookmark agents");
       return;
     }
     
     try {
-      // Get current bookmarks
       const { data, error } = await supabase
         .from("profiles")
         .select("bookmarks")
@@ -140,13 +137,11 @@ const AgentCard = ({
       
       if (error) throw error;
       
-      // Update bookmarks array
       const bookmarks = data.bookmarks as string[] || [];
       const updatedBookmarks = isBookmarked
         ? bookmarks.filter((bookmarkId: string) => bookmarkId !== id)
         : [...bookmarks, id];
       
-      // Save updated bookmarks
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ bookmarks: updatedBookmarks })
@@ -162,27 +157,33 @@ const AgentCard = ({
     }
   };
 
-  const handleQuickView = () => {
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setShowPreview(true);
   };
 
-  const handleShare = () => {
-    // Copy link to clipboard
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
     navigator.clipboard.writeText(`https://example.com/agent/${id}`).then(
       () => toast.success("Link copied to clipboard!"),
       () => toast.error("Failed to copy link")
     );
   };
 
+  const handleCardClick = () => {
+    navigate(`/apps/${id}`);
+  };
+
   return (
     <>
       <div 
         className={cn(
-          "rounded-2xl overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30 backdrop-blur-lg shadow-lg transition-all duration-300 fade-in relative group",
+          "rounded-2xl overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30 backdrop-blur-lg shadow-lg transition-all duration-300 fade-in relative group cursor-pointer",
           isHovered ? "scale-[1.03] shadow-xl" : "scale-100"
         )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onClick={handleCardClick}
       >
         <div 
           className="absolute inset-0 bg-grid-white/5 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -216,7 +217,6 @@ const AgentCard = ({
             <h3 className="text-xl font-bold mt-2">{name}</h3>
           </div>
           
-          {/* Action buttons */}
           <div className="absolute top-4 right-4 flex flex-col space-y-2">
             <button
               onClick={toggleFavorite}

@@ -1,12 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { ArrowRight, Star, Users, Check, Award, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import AgentPreview from "./AgentPreview";
 
 const FeaturedAgent = () => {
+  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [featuredAgent, setFeaturedAgent] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,13 +39,14 @@ const FeaturedAgent = () => {
 
   const handleTryNow = () => {
     if (featuredAgent) {
-      setShowPreview(true);
+      navigate(`/apps/${featuredAgent.id}`);
     } else {
       toast.info("Feature coming soon!");
     }
   };
 
-  const handleShowVideo = () => {
+  const handleShowVideo = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (featuredAgent) {
       setShowPreview(true);
     } else {
@@ -57,8 +59,15 @@ const FeaturedAgent = () => {
     toast.success(`You rated this agent ${rating} stars!`);
   };
 
-  const handleAddToFavorites = () => {
+  const handleAddToFavorites = (e: React.MouseEvent) => {
+    e.stopPropagation();
     toast.success("Added to your favorites!");
+  };
+
+  const handleCardClick = () => {
+    if (featuredAgent) {
+      navigate(`/apps/${featuredAgent.id}`);
+    }
   };
 
   if (isLoading) {
@@ -72,15 +81,15 @@ const FeaturedAgent = () => {
   return (
     <>
       <div 
-        className="relative h-[500px] w-full overflow-hidden rounded-3xl bg-gradient-to-br from-background to-secondary/30 animate-fadeIn transition-all duration-300"
+        className="relative h-[500px] w-full overflow-hidden rounded-3xl bg-gradient-to-br from-background to-secondary/30 animate-fadeIn transition-all duration-300 cursor-pointer"
         style={{ 
           transform: isHovered ? 'scale(1.01)' : 'scale(1)',
           boxShadow: isHovered ? '0 10px 40px rgba(0, 0, 0, 0.1)' : 'none' 
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onClick={handleCardClick}
       >
-        {/* Animated background effect */}
         <div className="absolute inset-0 bg-grid-white/10 opacity-50">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" 
                style={{ 
@@ -93,7 +102,6 @@ const FeaturedAgent = () => {
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent dark:from-black/80 dark:via-black/50" />
             
-            {/* Featured Badge - Animated on hover */}
             <div 
               className="absolute top-6 left-6 px-4 py-1 rounded-full bg-primary/10 backdrop-blur-sm flex items-center gap-2 transition-all duration-300"
               style={{ 
@@ -105,7 +113,6 @@ const FeaturedAgent = () => {
               <span className="text-primary font-semibold">Featured Agent</span>
             </div>
             
-            {/* Main content */}
             <div className="absolute bottom-0 left-0 right-0 p-8">
               <div className="flex flex-wrap items-center gap-4 mb-4">
                 <div className="flex items-center gap-2 bg-black/40 text-white px-3 py-1 rounded-full backdrop-blur-sm dark:bg-white/10">
@@ -130,7 +137,6 @@ const FeaturedAgent = () => {
                 {featuredAgent.description}
               </p>
               
-              {/* Interactive star rating */}
               {!userRating && (
                 <div className="flex items-center gap-2 mb-6">
                   <span className="text-white/80 text-sm">Rate this agent:</span>
