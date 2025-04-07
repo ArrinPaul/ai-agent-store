@@ -1,6 +1,8 @@
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { Link, type LinkProps } from "react-router-dom"
 
 import { cn } from "@/lib/utils"
 
@@ -37,10 +39,23 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
+  to?: string
 }
 
+// This component combines button and link functionality
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, to, ...props }, ref) => {
+    // If to prop is provided, render as Link
+    if (to) {
+      return (
+        <Link
+          to={to}
+          className={cn(buttonVariants({ variant, size, className }))}
+          {...props}
+        />
+      )
+    }
+    
     const Comp = asChild ? Slot : "button"
     return (
       <Comp

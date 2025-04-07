@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
@@ -38,14 +37,12 @@ const AppPreview = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
-  // Mock data for preview
   const previewImages = [
     "https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?q=80&w=1974&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1965&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1618767147421-a0e5f8c5dfb0?q=80&w=1974&auto=format&fit=crop"
   ];
 
-  // Mock features and prompts
   const features = [
     "Seamless integration with your existing workflow",
     "Advanced natural language processing capabilities",
@@ -62,7 +59,6 @@ const AppPreview = () => {
     "Translate this document to Spanish while maintaining context"
   ];
 
-  // Mock reviews if none exist
   const mockReviews = [
     {
       id: "mock-1",
@@ -109,7 +105,6 @@ const AppPreview = () => {
         if (error) throw error;
         setApp(data);
         
-        // Fetch user reviews
         const { data: reviewData, error: reviewError } = await supabase
           .from("app_reviews")
           .select("*")
@@ -119,18 +114,15 @@ const AppPreview = () => {
         if (reviewError) throw reviewError;
         
         if (reviewData && reviewData.length > 0) {
-          // Transform the review data
           const formattedReviews = reviewData.map(review => ({
             ...review,
             username: review.user_id ? review.user_id.substring(0, 8) : "Anonymous"
           }));
           setReviews(formattedReviews);
         } else {
-          // Use mock reviews if no real ones exist
           setReviews(mockReviews);
         }
         
-        // Check if user has already rated
         if (session?.user) {
           const { data: userRatingData } = await supabase
             .from("app_reviews")
@@ -144,7 +136,6 @@ const AppPreview = () => {
             setUserReview(userRatingData.comment || "");
           }
 
-          // Check if app is in user's favorites
           const { data: userData } = await supabase
             .from("profiles")
             .select("favorites, bookmarks")
@@ -189,7 +180,6 @@ const AppPreview = () => {
     
     setUserRating(rating);
     
-    // If user has a review comment, submit both together
     if (userReview) {
       await submitReview(rating, userReview);
     } else {
@@ -210,7 +200,6 @@ const AppPreview = () => {
     
     setIsSubmittingReview(true);
     try {
-      // Check if user has already reviewed
       const { data: existingReview } = await supabase
         .from("app_reviews")
         .select("id")
@@ -218,11 +207,9 @@ const AppPreview = () => {
         .eq("user_id", session.user.id)
         .single();
       
-      // Generate a username from the user's email
       const username = session.user.email?.split('@')[0] || "User";
         
       if (existingReview) {
-        // Update existing review
         await supabase
           .from("app_reviews")
           .update({ 
@@ -234,7 +221,6 @@ const AppPreview = () => {
           
         toast.success("Your review has been updated!");
       } else {
-        // Create new review
         await supabase
           .from("app_reviews")
           .insert({
@@ -248,7 +234,6 @@ const AppPreview = () => {
           
         toast.success("Your review has been submitted!");
         
-        // Add to the reviews list
         const newReview = {
           id: Date.now().toString(),
           user_id: session.user.id,
@@ -262,7 +247,6 @@ const AppPreview = () => {
         setReviews([newReview, ...reviews]);
       }
       
-      // Reset the form
       setUserReview("");
     } catch (error) {
       console.error("Error submitting review:", error);
@@ -273,7 +257,6 @@ const AppPreview = () => {
   };
 
   const handleShare = () => {
-    // Copy link to clipboard
     navigator.clipboard.writeText(`${window.location.origin}/apps/${appId}`).then(
       () => toast.success("Link copied to clipboard!"),
       () => toast.error("Failed to copy link")
@@ -285,7 +268,6 @@ const AppPreview = () => {
     
     setIsDownloading(true);
     try {
-      // Update downloads count in Supabase
       const { error } = await supabase
         .from("apps")
         .update({ downloads: (app.downloads || 0) + 1 })
@@ -295,7 +277,6 @@ const AppPreview = () => {
 
       toast.success("Download started successfully!");
       
-      // Simulate download delay
       setTimeout(() => {
         setIsDownloading(false);
         toast.success(`${app.name} has been added to your apps!`);
@@ -314,7 +295,6 @@ const AppPreview = () => {
     }
     
     try {
-      // Get current favorites
       const { data, error } = await supabase
         .from("profiles")
         .select("favorites")
@@ -323,13 +303,11 @@ const AppPreview = () => {
       
       if (error) throw error;
       
-      // Update favorites array
       const favorites = data.favorites as string[] || [];
       const updatedFavorites = isFavorite
         ? favorites.filter((favId: string) => favId !== appId)
         : [...favorites, appId];
       
-      // Save updated favorites
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ favorites: updatedFavorites })
@@ -352,7 +330,6 @@ const AppPreview = () => {
     }
     
     try {
-      // Get current bookmarks
       const { data, error } = await supabase
         .from("profiles")
         .select("bookmarks")
@@ -361,13 +338,11 @@ const AppPreview = () => {
       
       if (error) throw error;
       
-      // Update bookmarks array
       const bookmarks = data.bookmarks as string[] || [];
       const updatedBookmarks = isBookmarked
         ? bookmarks.filter((bookmarkId: string) => bookmarkId !== appId)
         : [...bookmarks, appId];
       
-      // Save updated bookmarks
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ bookmarks: updatedBookmarks })
@@ -390,7 +365,6 @@ const AppPreview = () => {
     }
     
     try {
-      // Update helpful count
       const updatedReviews = reviews.map(review => {
         if (review.id === reviewId) {
           return {
@@ -403,7 +377,6 @@ const AppPreview = () => {
       
       setReviews(updatedReviews);
       
-      // Save to database if not a mock review
       if (!reviewId.startsWith("mock")) {
         await supabase
           .from("app_reviews")
@@ -432,17 +405,15 @@ const AppPreview = () => {
       <div className="container mx-auto py-8 px-4 text-center">
         <h2 className="text-2xl font-bold text-destructive mb-4">App Not Found</h2>
         <p className="text-muted-foreground mb-4">Sorry, we couldn't find the app you're looking for.</p>
-        <Button as={Link} to="/apps">Browse Apps</Button>
+        <Button to="/apps">Browse Apps</Button>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto py-8 px-4">
-      {/* Back button */}
       <div className="mb-6">
         <Button 
-          as={Link} 
           to="/apps" 
           variant="ghost" 
           className="flex items-center gap-2"
@@ -453,7 +424,6 @@ const AppPreview = () => {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Image gallery */}
         <div className="w-full relative">
           <div className="aspect-video relative overflow-hidden rounded-xl">
             <img 
@@ -463,7 +433,6 @@ const AppPreview = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
             
-            {/* Navigation controls */}
             <button 
               onClick={handlePrevImage}
               className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white backdrop-blur-sm hover:bg-black/50 transition-colors"
@@ -479,7 +448,6 @@ const AppPreview = () => {
               <ChevronLeft className="h-6 w-6 rotate-180" />
             </button>
             
-            {/* Image counter and dots */}
             <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-2">
               {previewImages.map((_, index) => (
                 <button
@@ -497,7 +465,6 @@ const AppPreview = () => {
             </div>
           </div>
 
-          {/* App actions */}
           <div className="mt-6 flex flex-wrap gap-3">
             <Button
               onClick={handleDownload}
@@ -551,7 +518,6 @@ const AppPreview = () => {
           </div>
         </div>
         
-        {/* App details */}
         <div>
           <div className="mb-4">
             <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -573,7 +539,6 @@ const AppPreview = () => {
             <h1 className="text-3xl font-bold">{app.name}</h1>
           </div>
           
-          {/* User rating */}
           <div className="flex items-center gap-2 mb-6">
             <span className="text-sm font-medium">Rate this app:</span>
             <div className="flex">
@@ -597,7 +562,6 @@ const AppPreview = () => {
             </div>
           </div>
           
-          {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full grid grid-cols-4 mb-4">
               <TabsTrigger value="overview" className="flex items-center gap-1">
@@ -660,7 +624,6 @@ const AppPreview = () => {
             <TabsContent value="reviews" className="space-y-4">
               <h3 className="text-lg font-semibold mb-2">User Reviews</h3>
               
-              {/* Review submission form */}
               {session?.user && (
                 <div className="p-4 border rounded-lg mb-4">
                   <h4 className="text-sm font-medium mb-2">Write a Review</h4>
@@ -703,7 +666,6 @@ const AppPreview = () => {
                 </div>
               )}
               
-              {/* Reviews list */}
               <div className="space-y-4">
                 {reviews.length > 0 ? (
                   reviews.map((review) => (
