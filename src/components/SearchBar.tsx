@@ -1,22 +1,50 @@
-
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X } from "lucide-react";
+import { Search, X, ArrowRight, Clock, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Loader } from "@/components/ui/loader";
+import { cn } from "@/lib/utils";
 
-const SearchBar = ({ className = "" }: { className?: string }) => {
+interface SearchBarProps {
+  className?: string;
+  hideOnMobile?: boolean;
+}
+
+const SearchBar = ({ className = "", hideOnMobile = false }: SearchBarProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<{name: string, type: 'suggestion' | 'recent' | 'category'}[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Close suggestions when clicking outside
+    const storedSearches = localStorage.getItem('recentSearches');
+    if (storedSearches) {
+      setRecentSearches(JSON.parse(storedSearches).slice(0, 3));
+    }
+  }, []);
+
+  const saveRecentSearch = useCallback((term: string) => {
+    const storedSearches = localStorage.getItem('recentSearches');
+    let searches = storedSearches ? JSON.parse(storedSearches) : [];
+    
+    searches = searches.filter((s: string) => s !== term);
+    
+    searches.unshift(term);
+    
+    searches = searches.slice(0, 5);
+    
+    localStorage.setItem('recentSearches', JSON.stringify(searches));
+    setRecentSearches(searches.slice(0, 3));
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node) &&
           inputRef.current && !inputRef.current.contains(event.target as Node)) {
@@ -33,10 +61,19 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (searchTerm.trim().length < 2) {
-        setSuggestions([]);
+        if (recentSearches.length > 0) {
+          setSuggestions(recentSearches.map(term => ({ 
+            name: term, 
+            type: 'recent' as const
+          })));
+        } else {
+          setSuggestions([]);
+        }
+        setIsLoading(false);
         return;
       }
 
+      setIsLoading(true);
       try {
         const { data, error } = await supabase
           .from("apps")
@@ -46,9 +83,33 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
           .limit(5);
 
         if (error) throw error;
-        setSuggestions(data.map(app => app.name));
+        
+        const { data: categoryData, error: categoryError } = await supabase
+          .from("apps")
+          .select("category")
+          .ilike("category", `%${searchTerm}%`)
+          .order("search_count", { ascending: false })
+          .limit(3);
+          
+        if (categoryError) throw categoryError;
+        
+        const uniqueCategories = Array.from(new Set(categoryData.map(item => item.category)))
+          .filter(Boolean)
+          .map(category => ({
+            name: category as string,
+            type: 'category' as const
+          }));
+          
+        const appSuggestions = data.map(app => ({
+          name: app.name,
+          type: 'suggestion' as const
+        }));
+        
+        setSuggestions([...appSuggestions, ...uniqueCategories]);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -57,7 +118,7 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
     }, 300);
 
     return () => clearTimeout(debounceTimer);
-  }, [searchTerm]);
+  }, [searchTerm, recentSearches]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +127,9 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
       toast.error("Please enter a search term");
       return;
     }
+    
+    setShowSuggestions(false);
+    saveRecentSearch(searchTerm.trim());
     
     try {
       const { data, error } = await supabase
@@ -76,10 +140,8 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
       
       if (error) throw error;
       
-      // Store search results in localStorage to avoid state loss on navigation
       localStorage.setItem("searchResults", JSON.stringify(data));
       
-      // Update search_count for matching apps
       if (data.length > 0) {
         const updatePromises = data.map(app => 
           supabase
@@ -91,7 +153,6 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
         await Promise.all(updatePromises);
       }
       
-      // Navigate to apps page with search query
       navigate(`/apps?search=${encodeURIComponent(searchTerm)}`);
       toast.success(`Found ${data.length} results for "${searchTerm}"`);
     } catch (error) {
@@ -100,16 +161,20 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
     }
   };
 
-  const selectSuggestion = (suggestion: string) => {
+  const selectSuggestion = (suggestion: string, type: 'suggestion' | 'recent' | 'category') => {
     setSearchTerm(suggestion);
     setShowSuggestions(false);
-    // Auto-submit after selecting a suggestion
-    setTimeout(() => {
-      if (inputRef.current) {
-        const form = inputRef.current.form;
-        if (form) form.dispatchEvent(new Event('submit', { cancelable: true }));
-      }
-    }, 100);
+    
+    if (type === 'category') {
+      navigate(`/apps?category=${encodeURIComponent(suggestion)}`);
+    } else {
+      setTimeout(() => {
+        if (inputRef.current) {
+          const form = inputRef.current.form;
+          if (form) form.dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+      }, 100);
+    }
   };
 
   const clearSearch = () => {
@@ -120,7 +185,11 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
   };
 
   return (
-    <form onSubmit={handleSearch} className={`relative ${className}`}>
+    <form onSubmit={handleSearch} className={cn(
+      "relative",
+      hideOnMobile ? "hidden md:block" : "",
+      className
+    )}>
       <div className="relative flex w-full items-center">
         <Search className="absolute left-3 text-muted-foreground h-4 w-4 pointer-events-none" />
         <Input
@@ -133,13 +202,13 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
             setShowSuggestions(true);
           }}
           onFocus={() => setShowSuggestions(true)}
-          className="pl-10 pr-16 rounded-full bg-background/80 transition-all focus:ring-2 focus:ring-primary/20"
+          className="pl-10 pr-16 rounded-full bg-background/80 transition-all focus:ring-2 focus:ring-primary/20 border border-input/80 hover:border-input"
         />
         {searchTerm && (
           <button
             type="button"
             onClick={clearSearch}
-            className="absolute right-14 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-14 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-full hover:bg-muted/50"
           >
             <X className="h-4 w-4" />
           </button>
@@ -147,29 +216,45 @@ const SearchBar = ({ className = "" }: { className?: string }) => {
         <Button 
           type="submit" 
           size="sm" 
-          className="absolute right-1 rounded-full hover:bg-primary/90"
+          className="absolute right-1 rounded-full hover:bg-primary/90 active:scale-95"
         >
-          Search
+          <Search className="h-4 w-4 mr-1" />
+          <span className="sr-only md:not-sr-only">Search</span>
         </Button>
       </div>
       
-      {showSuggestions && suggestions.length > 0 && (
+      {showSuggestions && (suggestions.length > 0 || isLoading) && (
         <div 
           ref={suggestionsRef}
-          className="absolute mt-1 w-full bg-background rounded-xl shadow-lg border border-border z-50 animate-fade-in"
+          className="absolute mt-1 w-full bg-background rounded-xl shadow-lg border border-border z-50 animate-fadeIn"
         >
-          <ul className="py-1">
-            {suggestions.map((suggestion, index) => (
-              <li 
-                key={index}
-                className="px-4 py-2 hover:bg-secondary cursor-pointer transition-colors flex items-center"
-                onClick={() => selectSuggestion(suggestion)}
-              >
-                <Search className="h-3 w-3 text-muted-foreground mr-2" />
-                {suggestion}
-              </li>
-            ))}
-          </ul>
+          <div className="py-1.5">
+            {isLoading ? (
+              <div className="flex justify-center py-4">
+                <Loader size="sm" variant="dots" />
+              </div>
+            ) : (
+              <ul>
+                {suggestions.map((suggestion, index) => (
+                  <li 
+                    key={index}
+                    className="px-4 py-2.5 hover:bg-muted/50 cursor-pointer transition-colors flex items-center gap-2"
+                    onClick={() => selectSuggestion(suggestion.name, suggestion.type)}
+                  >
+                    {suggestion.type === 'recent' ? (
+                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                    ) : suggestion.type === 'category' ? (
+                      <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                    ) : (
+                      <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                    <span className="flex-1 truncate">{suggestion.name}</span>
+                    <ArrowRight className="h-3 w-3 text-muted-foreground opacity-70" />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
     </form>

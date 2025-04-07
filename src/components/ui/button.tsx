@@ -20,12 +20,14 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        gradient: "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground hover:from-primary/90 hover:to-primary/60 shadow-sm",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
+        pill: "h-9 rounded-full px-4",
       },
     },
     defaultVariants: {
@@ -40,21 +42,24 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
   to?: string
+  isLoading?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, to, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, to, isLoading, children, ...props }, ref) => {
     // If to prop is provided, render as Link
     if (to) {
-      // We can only safely pass children to Link to avoid type conflicts
-      const { children } = props;
-      
       return (
         <Link
           to={to}
           className={cn(buttonVariants({ variant, size, className }))}
         >
-          {children}
+          {isLoading ? (
+            <>
+              <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+              <span>Loading...</span>
+            </>
+          ) : children}
         </Link>
       );
     }
@@ -64,8 +69,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        disabled={isLoading || props.disabled}
         {...props}
-      />
+      >
+        {isLoading ? (
+          <>
+            <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+            <span>Loading...</span>
+          </>
+        ) : children}
+      </Comp>
     )
   }
 )
