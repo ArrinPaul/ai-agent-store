@@ -42,18 +42,21 @@ export interface ButtonProps
   to?: string
 }
 
-// This component combines button and link functionality
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, to, ...props }, ref) => {
     // If to prop is provided, render as Link
     if (to) {
-      return (
-        <Link
-          to={to}
-          className={cn(buttonVariants({ variant, size, className }))}
-          {...props}
-        />
-      )
+      // Extract only the props that are valid for Link component
+      // This avoids trying to spread button-specific props onto a Link
+      const { onClick, children, className: componentClassName, ...restProps } = props;
+      const linkProps: LinkProps & { className?: string } = {
+        to,
+        onClick,
+        className: cn(buttonVariants({ variant, size, className: componentClassName })),
+        children
+      };
+      
+      return <Link {...linkProps} />;
     }
     
     const Comp = asChild ? Slot : "button"
