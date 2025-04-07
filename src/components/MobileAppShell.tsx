@@ -26,30 +26,33 @@ const MobileAppShell = ({ children }: MobileAppShellProps) => {
   
   // Scroll to top when route changes
   useEffect(() => {
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location.pathname]);
   
   const handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
+  // Don't show TabBar on auth page
+  const showTabBar = !location.pathname.includes('/auth');
+  
   return (
     <div className="min-h-screen flex flex-col bg-background relative overflow-x-hidden">
       {/* Offline indicator */}
       {!isOnline && (
-        <div className="fixed top-0 left-0 right-0 bg-destructive text-destructive-foreground z-50 p-2 flex items-center justify-center gap-2">
+        <div className="fixed top-0 left-0 right-0 bg-destructive text-destructive-foreground z-50 p-2 flex items-center justify-center gap-2 animate-slideIn">
           <WifiOff className="h-4 w-4" />
           <span className="text-sm font-medium">You're offline</span>
         </div>
       )}
       
       {/* Install prompt - only show on mobile and if not installed */}
-      {!isInstalled && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && (
-        <div className="fixed bottom-[70px] left-4 right-4 bg-primary text-primary-foreground z-40 p-3 rounded-lg flex items-center justify-between shadow-lg">
+      {!isInstalled && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && !location.pathname.includes('/auth') && (
+        <div className="fixed bottom-[70px] left-4 right-4 bg-primary text-primary-foreground z-40 p-3 rounded-lg flex items-center justify-between shadow-lg animate-fadeIn">
           <span className="text-sm font-medium">Install for a better experience</span>
           <button 
             onClick={installPrompt}
-            className="flex items-center gap-1 bg-white/20 text-white px-3 py-1 rounded-full text-sm"
+            className="flex items-center gap-1 bg-white/20 text-white px-3 py-1 rounded-full text-sm hover:bg-white/30 transition-colors"
           >
             <Download className="h-4 w-4" /> Install
           </button>
@@ -57,15 +60,15 @@ const MobileAppShell = ({ children }: MobileAppShellProps) => {
       )}
       
       {/* Main content */}
-      <div className="flex-1 pb-16">
+      <div className={`flex-1 ${showTabBar ? 'pb-16' : ''}`}>
         {children}
       </div>
       
       {/* Scroll to top button */}
-      {showScrollTop && (
+      {showScrollTop && showTabBar && (
         <button
           onClick={handleScrollToTop}
-          className="fixed bottom-20 right-4 z-40 p-2 bg-primary text-primary-foreground rounded-full shadow-lg"
+          className="fixed bottom-20 right-4 z-40 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors"
           aria-label="Scroll to top"
         >
           <ArrowUp className="h-5 w-5" />
@@ -73,7 +76,7 @@ const MobileAppShell = ({ children }: MobileAppShellProps) => {
       )}
       
       {/* Bottom tab bar - fixed at bottom */}
-      <TabBar />
+      {showTabBar && <TabBar />}
     </div>
   );
 };

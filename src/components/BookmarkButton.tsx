@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
 
 interface BookmarkButtonProps {
   appId: string;
@@ -24,6 +25,7 @@ const BookmarkButton = ({
   onBookmarkChange
 }: BookmarkButtonProps) => {
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
+  const [isLoading, setIsLoading] = useState(false);
   const { session } = useAuth();
 
   useEffect(() => {
@@ -35,6 +37,8 @@ const BookmarkButton = ({
       toast.error("Please log in to bookmark agents");
       return;
     }
+    
+    setIsLoading(true);
     
     try {
       // Get current bookmarks
@@ -71,6 +75,8 @@ const BookmarkButton = ({
     } catch (error) {
       console.error("Error updating bookmarks:", error);
       toast.error("Failed to update bookmarks");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -82,13 +88,14 @@ const BookmarkButton = ({
 
   if (variant === "button") {
     return (
-      <button
+      <Button
         onClick={toggleBookmark}
+        disabled={isLoading}
+        variant={isBookmarked ? "secondary" : "outline"}
+        size="sm"
         className={cn(
-          "flex items-center gap-2 rounded-md px-3 py-1.5 transition-colors",
-          isBookmarked 
-            ? "bg-primary/10 text-primary" 
-            : "bg-secondary text-foreground hover:bg-secondary/80",
+          "flex items-center gap-2 transition-all",
+          isBookmarked ? "bg-primary/10 text-primary" : "",
           className
         )}
         aria-label={isBookmarked ? "Remove from bookmarks" : "Save to bookmarks"}
@@ -97,26 +104,31 @@ const BookmarkButton = ({
           sizeClasses[size],
           isBookmarked ? "fill-primary" : ""
         )} />
-        <span>{isBookmarked ? "Bookmarked" : "Bookmark"}</span>
-      </button>
+        <span>{isLoading ? "..." : isBookmarked ? "Bookmarked" : "Bookmark"}</span>
+      </Button>
     );
   }
 
   return (
     <button
       onClick={toggleBookmark}
+      disabled={isLoading}
       className={cn(
-        "p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors",
+        "p-2 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-colors disabled:opacity-50",
         className
       )}
       aria-label={isBookmarked ? "Remove from bookmarks" : "Save to bookmarks"}
     >
-      <Bookmark 
-        className={cn(
-          sizeClasses[size], 
-          isBookmarked ? "fill-primary text-primary" : "text-white"
-        )} 
-      />
+      {isLoading ? (
+        <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+      ) : (
+        <Bookmark 
+          className={cn(
+            sizeClasses[size], 
+            isBookmarked ? "fill-primary text-primary" : "text-white"
+          )} 
+        />
+      )}
     </button>
   );
 };
