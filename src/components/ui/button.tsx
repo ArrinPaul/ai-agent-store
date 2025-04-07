@@ -46,17 +46,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, to, ...props }, ref) => {
     // If to prop is provided, render as Link
     if (to) {
-      // Extract only the props that are valid for Link component
-      // This avoids trying to spread button-specific props onto a Link
-      const { onClick, children, className: componentClassName, ...restProps } = props;
-      const linkProps: LinkProps & { className?: string } = {
-        to,
-        onClick,
-        className: cn(buttonVariants({ variant, size, className: componentClassName })),
-        children
-      };
+      // Extract only the props that are compatible with Link
+      // We need to be careful about event handlers which have different element types
+      const { children } = props;
       
-      return <Link {...linkProps} />;
+      return (
+        <Link
+          to={to}
+          className={cn(buttonVariants({ variant, size, className }))}
+        >
+          {children}
+        </Link>
+      );
     }
     
     const Comp = asChild ? Slot : "button"
