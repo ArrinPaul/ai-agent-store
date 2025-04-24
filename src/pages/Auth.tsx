@@ -1,8 +1,13 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader } from "@/components/ui/loader";
+import { EyeIcon, EyeOffIcon, ArrowLeftIcon } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -10,7 +15,16 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  // Check if the URL contains a reset param
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("reset") === "true") {
+      toast.info("Please set your new password below");
+    }
+  }, []);
 
   const validateEmail = (email: string) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
@@ -162,106 +176,136 @@ const Auth = () => {
   const renderForm = () => {
     if (isForgotPassword) {
       return (
-        <form onSubmit={handleResetPassword} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-2">
-              Email
-            </label>
-            <input
+        <form onSubmit={handleResetPassword} className="space-y-6 animate-fadeIn">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value.trim())}
-              className="w-full px-4 py-2 rounded-lg bg-secondary/50 border focus:ring-2 focus:ring-primary/20"
               placeholder="your@email.com"
+              disabled={loading}
               required
+              className="bg-secondary/50"
             />
           </div>
 
-          <button
+          <Button
             type="submit"
+            className="w-full"
             disabled={loading}
-            className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            {loading ? "Loading..." : "Send Reset Instructions"}
-          </button>
+            {loading ? <Loader variant="dots" className="mr-2" /> : null}
+            Send Reset Instructions
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setIsForgotPassword(false)}
-            className="w-full text-center mt-4 text-sm text-muted-foreground hover:text-primary transition-colors"
+            className="w-full"
+            disabled={loading}
           >
+            <ArrowLeftIcon className="h-4 w-4 mr-2" />
             Back to Sign In
-          </button>
+          </Button>
         </form>
       );
     }
 
     return (
-      <form onSubmit={handleAuth} className="space-y-6">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-2">
-            Email
-          </label>
-          <input
+      <form onSubmit={handleAuth} className="space-y-6 animate-fadeIn">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value.trim())}
-            className="w-full px-4 py-2 rounded-lg bg-secondary/50 border focus:ring-2 focus:ring-primary/20"
             placeholder="your@email.com"
+            disabled={loading}
             required
+            className="bg-secondary/50"
           />
         </div>
         
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-2">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg bg-secondary/50 border focus:ring-2 focus:ring-primary/20"
-            placeholder="Min. 6 characters"
-            required
-          />
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Min. 6 characters"
+              disabled={loading}
+              required
+              className="bg-secondary/50 pr-10"
+            />
+            <button 
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              tabIndex={-1}
+            >
+              {showPassword ? 
+                <EyeOffIcon className="h-4 w-4" /> : 
+                <EyeIcon className="h-4 w-4" />
+              }
+            </button>
+          </div>
         </div>
 
-        <button
+        <Button
           type="submit"
+          className="w-full"
           disabled={loading}
-          className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          {loading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
-        </button>
+          {loading && <Loader variant="dots" className="mr-2" />}
+          {isSignUp ? "Create Account" : "Sign In"}
+        </Button>
 
         {!isSignUp && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setIsForgotPassword(true)}
-            className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors"
+            className="w-full text-sm"
+            disabled={loading}
           >
             Forgot Password?
-          </button>
+          </Button>
         )}
 
-        <button
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-background px-2 text-muted-foreground">
+              {isSignUp ? "Already have an account?" : "Don't have an account?"}
+            </span>
+          </div>
+        </div>
+
+        <Button
           type="button"
+          variant="outline"
           onClick={() => setIsSignUp(!isSignUp)}
-          className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors"
+          className="w-full"
+          disabled={loading}
         >
-          {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
-        </button>
+          {isSignUp ? "Sign In Instead" : "Create Account"}
+        </Button>
       </form>
     );
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md p-8 glass-effect rounded-xl">
-        <h1 className="text-3xl font-bold text-center mb-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md p-6 sm:p-8 glass-effect rounded-xl shadow-card animate-fadeIn">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-8">
           {isForgotPassword 
             ? "Reset Password"
             : isSignUp 
@@ -271,6 +315,10 @@ const Auth = () => {
         
         {renderForm()}
       </div>
+      
+      <p className="mt-8 text-sm text-muted-foreground">
+        AI Agent Store &copy; {new Date().getFullYear()}
+      </p>
     </div>
   );
 };

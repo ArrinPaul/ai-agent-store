@@ -7,10 +7,31 @@ import { useEffect, useState } from "react";
 const TabBar = () => {
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
+  const [touchStartY, setTouchStartY] = useState(0);
+  const [showTabBar, setShowTabBar] = useState(true);
   
   useEffect(() => {
     setCurrentPath(location.pathname);
   }, [location.pathname]);
+  
+  // Handle scroll to hide/show tab bar
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      // Show tabbar when scrolling up, hide when scrolling down
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setShowTabBar(false);
+      } else {
+        setShowTabBar(true);
+      }
+      lastScrollY = currentScrollY;
+    };
+    
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   
   const tabs = [
     {
@@ -40,7 +61,10 @@ const TabBar = () => {
   ];
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-16 border-t bg-background/80 backdrop-blur-lg z-40">
+    <div className={cn(
+      "fixed bottom-0 left-0 right-0 h-16 border-t bg-background/90 backdrop-blur-lg z-40 transition-transform duration-300",
+      showTabBar ? "translate-y-0" : "translate-y-full"
+    )}>
       <div className="grid grid-cols-4 h-full max-w-md mx-auto">
         {tabs.map((tab) => (
           <Link
