@@ -101,6 +101,7 @@ export default {
           "50%": { opacity: "0.5" },
         },
         shimmer: {
+          "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" },
         }
       },
@@ -110,7 +111,7 @@ export default {
         fadeIn: "fadeIn 0.5s ease-out",
         slideIn: "slideIn 0.5s ease-out",
         pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        shimmer: "shimmer 2s infinite",
+        shimmer: "shimmer 2s infinite linear",
       },
       boxShadow: {
         'soft': '0 4px 12px rgba(0, 0, 0, 0.05)',

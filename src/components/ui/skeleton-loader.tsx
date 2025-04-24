@@ -1,5 +1,6 @@
 
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface SkeletonProps {
   className?: string;
@@ -18,7 +19,12 @@ export function Skeleton({ className }: SkeletonProps) {
 
 export function CardSkeleton() {
   return (
-    <div className="border rounded-xl p-4 space-y-3 shimmer">
+    <motion.div 
+      className="border rounded-xl p-4 space-y-3 shimmer"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <Skeleton className="h-40 w-full rounded-md" />
       <Skeleton className="h-6 w-3/4" />
       <Skeleton className="h-4 w-1/2" />
@@ -26,13 +32,18 @@ export function CardSkeleton() {
         <Skeleton className="h-8 w-24" />
         <Skeleton className="h-8 w-8 rounded-full" />
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 export function FeaturedSkeletonLoader() {
   return (
-    <div className="relative h-[400px] md:h-[500px] w-full overflow-hidden rounded-xl md:rounded-3xl bg-gradient-to-br from-muted/60 to-muted/30 shimmer">
+    <motion.div 
+      className="relative h-[400px] md:h-[500px] w-full overflow-hidden rounded-xl md:rounded-3xl bg-gradient-to-br from-muted/60 to-muted/30 shimmer"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 space-y-4">
         <Skeleton className="h-6 w-1/3" />
         <Skeleton className="h-10 md:h-14 w-3/4" />
@@ -42,7 +53,7 @@ export function FeaturedSkeletonLoader() {
           <Skeleton className="h-10 w-32 rounded-full" />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
