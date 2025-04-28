@@ -14,7 +14,7 @@ import {
   XIcon, 
   GithubIcon,
   MailIcon,
-  GoogleIcon,
+  CircleUserIcon,
   AlertCircleIcon 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,7 +35,6 @@ const Auth = () => {
   });
   const navigate = useNavigate();
 
-  // Check if the URL contains a reset param
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("reset") === "true") {
@@ -43,10 +42,8 @@ const Auth = () => {
     }
   }, []);
 
-  // Check password strength
   useEffect(() => {
     if (password) {
-      // Check if password meets requirements
       const meetsLength = password.length >= 8;
       const hasNumber = /\d/.test(password);
       const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
@@ -57,7 +54,6 @@ const Auth = () => {
         special: hasSpecial,
       });
       
-      // Calculate strength score (0-3)
       let score = 0;
       if (meetsLength) score++;
       if (hasNumber) score++;
@@ -91,7 +87,6 @@ const Auth = () => {
     }
 
     if (!data) {
-      // First attempt
       const { error: insertError } = await supabase
         .from('login_attempts')
         .insert([{ email }]);
@@ -100,7 +95,6 @@ const Auth = () => {
       return 1;
     }
 
-    // Update attempt count
     const newCount = (data.attempt_count || 0) + 1;
     const { error: updateError } = await supabase
       .from('login_attempts')
@@ -137,8 +131,6 @@ const Auth = () => {
       });
       
       if (error) throw error;
-      
-      // No need for success toast as the page will redirect and reload
     } catch (error: any) {
       toast.error(error.message || "Error signing in with social provider");
     }
@@ -209,7 +201,6 @@ const Auth = () => {
           toast.success("Check your email to confirm your account!");
         }
       } else {
-        // Check login attempts before proceeding
         const attemptCount = await handleLoginAttempt(email);
         
         if (attemptCount >= 5) {
@@ -242,7 +233,6 @@ const Auth = () => {
     }
   };
 
-  // Show the main form content based on the current mode
   const renderForm = () => {
     if (isForgotPassword) {
       return (
@@ -347,7 +337,6 @@ const Auth = () => {
               </button>
             </div>
             
-            {/* Password strength indicator - only show when creating account */}
             {isSignUp && password && (
               <div className="pt-2">
                 <div className="flex gap-1 mb-2">
@@ -420,7 +409,7 @@ const Auth = () => {
             className="flex-1" 
             disabled={loading}
           >
-            <GoogleIcon className="h-4 w-4 mr-2" />
+            <CircleUserIcon className="h-4 w-4 mr-2" />
             Google
           </Button>
           <Button 
