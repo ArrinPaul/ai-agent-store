@@ -4,15 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-// Define the UserProfile interface to match exactly what we expect
+// Define the UserProfile interface to match exactly what we have in the database
 interface UserProfile {
   id: string;
   username: string | null;
   avatar_url: string | null;
-  full_name: string | null;
-  website: string | null;
-  bio: string | null;
-  updated_at: string | null;
+  created_at: string;
+  favorites: any | null;
+  bookmarks: any | null;
 }
 
 interface UserProfileContextType {
@@ -25,7 +24,7 @@ interface UserProfileContextType {
 const UserProfileContext = createContext<UserProfileContextType | undefined>(undefined);
 
 export function UserProfileProvider({ children }: { children: ReactNode }) {
-  const { session, user } = useAuth(); // Now user is properly typed
+  const { session, user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -48,10 +47,9 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
           id: data.id,
           username: data.username || null,
           avatar_url: data.avatar_url || null,
-          full_name: data.full_name || null,
-          website: data.website || null, 
-          bio: data.bio || null,
-          updated_at: data.updated_at || null
+          created_at: data.created_at,
+          favorites: data.favorites,
+          bookmarks: data.bookmarks
         };
         setProfile(userProfile);
       } else {
@@ -88,10 +86,9 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
             id: newData.id,
             username: newData.username || null,
             avatar_url: newData.avatar_url || null,
-            full_name: newData.full_name || null,
-            website: newData.website || null,
-            bio: newData.bio || null,
-            updated_at: newData.updated_at || null
+            created_at: newData.created_at,
+            favorites: newData.favorites,
+            bookmarks: newData.bookmarks
           };
           setProfile(userProfile);
         }
