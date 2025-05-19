@@ -51,6 +51,18 @@ const Auth = () => {
 
   const handleSocialLogin = async (provider: 'github' | 'google') => {
     try {
+      setLoading(true);
+      
+      // Clean up any existing auth state
+      cleanupAuthState();
+      
+      // Try signing out first to prevent any auth state issues
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -61,7 +73,26 @@ const Auth = () => {
       if (error) throw error;
     } catch (error: any) {
       toast.error(error.message || "Error signing in with social provider");
+      setLoading(false);
     }
+  };
+  
+  // Helper function to clean up auth state
+  const cleanupAuthState = () => {
+    // Remove standard auth tokens
+    localStorage.removeItem('supabase.auth.token');
+    // Remove all Supabase auth keys from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    // Remove from sessionStorage if in use
+    Object.keys(sessionStorage || {}).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
   };
 
   if (isForgotPassword) {
