@@ -1,11 +1,30 @@
 
-import { useState, useEffect } from "react";
-import { Wifi, WifiOff } from "lucide-react";
+import { useState, useEffect, useCallback, memo } from "react";
+import { WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-const OfflineIndicator = () => {
+const OfflineIndicator = memo(() => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Move the check connection function outside useEffect for reusability
+  const checkConnection = useCallback(async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      await fetch('/favicon.ico', { 
+        method: 'HEAD',
+        cache: 'no-cache',
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      if (!isOnline) setIsOnline(true);
+    } catch (error) {
+      if (isOnline) setIsOnline(false);
+    }
+  }, [isOnline]);
 
   useEffect(() => {
     // Handle online status changes
@@ -23,19 +42,8 @@ const OfflineIndicator = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Check connection status periodically
-    const intervalId = setInterval(() => {
-      fetch('/favicon.ico', { 
-        method: 'HEAD',
-        cache: 'no-cache'
-      })
-        .then(() => {
-          if (!isOnline) setIsOnline(true);
-        })
-        .catch(() => {
-          if (isOnline) setIsOnline(false);
-        });
-    }, 30000); // Check every 30 seconds
+    // Check connection status periodically with a more efficient interval
+    const intervalId = setInterval(checkConnection, 30000);
 
     // Clean up
     return () => {
@@ -43,7 +51,7 @@ const OfflineIndicator = () => {
       window.removeEventListener('offline', handleOffline);
       clearInterval(intervalId);
     };
-  }, [isOnline]);
+  }, [isOnline, checkConnection]);
 
   return (
     <AnimatePresence>
@@ -63,6 +71,8 @@ const OfflineIndicator = () => {
       )}
     </AnimatePresence>
   );
-};
+});
+
+OfflineIndicator.displayName = "OfflineIndicator";
 
 export default OfflineIndicator;

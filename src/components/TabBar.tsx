@@ -1,12 +1,12 @@
 
-import { Home, Grid, Bookmark, User, Bell } from "lucide-react";
+import { Home, Grid, Bookmark, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
-const TabBar = () => {
+const TabBar = memo(() => {
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [showTabBar, setShowTabBar] = useState(true);
@@ -17,36 +17,42 @@ const TabBar = () => {
     setCurrentPath(location.pathname);
     
     // Simulate checking for notifications - in a real app this would come from a backend
-    const checkNotifications = async () => {
+    const checkNotifications = () => {
       // This would be a real API call in production
-      setTimeout(() => {
-        setHasNotifications(Math.random() > 0.5);
-      }, 1000);
+      setHasNotifications(Math.random() > 0.5);
     };
     
     checkNotifications();
   }, [location.pathname]);
   
-  // Enhanced scroll handling with smoother transitions
+  // Enhanced scroll handling with smoother transitions and throttling
   useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Show tabbar when scrolling up, hide when scrolling down
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setShowTabBar(false);
-      } else if (currentScrollY < lastScrollY || currentScrollY < 50) {
-        setShowTabBar(true);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          
+          if (currentScrollY > lastScrollY && currentScrollY > 100) {
+            setShowTabBar(false);
+          } else if (currentScrollY < lastScrollY || currentScrollY < 50) {
+            setShowTabBar(true);
+          }
+          
+          setLastScrollY(currentScrollY);
+          ticking = false;
+        });
+        
+        ticking = true;
       }
-      
-      setLastScrollY(currentScrollY);
     };
     
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
   
-  const tabs = [
+  const tabs = useMemo(() => [
     {
       icon: Home,
       label: "Home",
@@ -71,7 +77,7 @@ const TabBar = () => {
       path: "/profile",
       active: currentPath === "/profile"
     }
-  ];
+  ], [currentPath]);
   
   return (
     <AnimatePresence mode="wait">
@@ -134,6 +140,8 @@ const TabBar = () => {
       </motion.div>
     </AnimatePresence>
   );
-};
+});
+
+TabBar.displayName = "TabBar";
 
 export default TabBar;

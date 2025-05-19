@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, memo } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
@@ -10,20 +10,19 @@ interface MobileAppShellProps {
   children: ReactNode;
 }
 
-const MobileAppShell = ({ children }: MobileAppShellProps) => {
+const MobileAppShell = memo(({ children }: MobileAppShellProps) => {
   const location = useLocation();
   const { session } = useAuth();
   const [showNav, setShowNav] = useState(true);
   const [showTabBar, setShowTabBar] = useState(true);
   
-  // Control navigation visibility based on route
+  // More efficient route-based navigation visibility control
   useEffect(() => {
-    const authPage = location.pathname === "/auth";
-    const notFoundPage = location.pathname === "/404";
-    const hiddenNavPages = [authPage, notFoundPage];
+    const hiddenNavPaths = ["/auth", "/404"];
+    const shouldShowNav = !hiddenNavPaths.includes(location.pathname);
     
-    setShowNav(!hiddenNavPages.includes(true));
-    setShowTabBar(!hiddenNavPages.includes(true));
+    setShowNav(shouldShowNav);
+    setShowTabBar(shouldShowNav);
   }, [location.pathname]);
 
   return (
@@ -38,6 +37,8 @@ const MobileAppShell = ({ children }: MobileAppShellProps) => {
       {showTabBar && session && <TabBar />}
     </div>
   );
-};
+});
+
+MobileAppShell.displayName = "MobileAppShell";
 
 export default MobileAppShell;

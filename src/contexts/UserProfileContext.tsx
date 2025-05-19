@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+// Define the UserProfile interface to match exactly what we expect
 interface UserProfile {
   id: string;
   username: string | null;
@@ -24,7 +25,7 @@ interface UserProfileContextType {
 const UserProfileContext = createContext<UserProfileContextType | undefined>(undefined);
 
 export function UserProfileProvider({ children }: { children: ReactNode }) {
-  const { session, user } = useAuth();
+  const { session, user } = useAuth(); // Now user is properly typed
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -41,7 +42,21 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
       
       if (error) throw error;
       
-      setProfile(data || null);
+      // Ensure we're setting data that conforms to UserProfile type
+      if (data) {
+        const userProfile: UserProfile = {
+          id: data.id,
+          username: data.username || null,
+          avatar_url: data.avatar_url || null,
+          full_name: data.full_name || null,
+          website: data.website || null, 
+          bio: data.bio || null,
+          updated_at: data.updated_at || null
+        };
+        setProfile(userProfile);
+      } else {
+        setProfile(null);
+      }
     } catch (error: any) {
       console.error('Error loading profile:', error);
     } finally {
@@ -67,7 +82,18 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, 
         (payload) => {
-          setProfile(payload.new as UserProfile);
+          const newData = payload.new as any;
+          // Ensure we're setting data that conforms to UserProfile type
+          const userProfile: UserProfile = {
+            id: newData.id,
+            username: newData.username || null,
+            avatar_url: newData.avatar_url || null,
+            full_name: newData.full_name || null,
+            website: newData.website || null,
+            bio: newData.bio || null,
+            updated_at: newData.updated_at || null
+          };
+          setProfile(userProfile);
         }
       )
       .subscribe();
