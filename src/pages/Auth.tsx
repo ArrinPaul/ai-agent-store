@@ -15,7 +15,7 @@ import {
   XIcon, 
   GithubIcon,
   MailIcon,
-  CircleUserIcon,
+  LinkedinIcon,
   AlertCircleIcon 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -49,7 +49,7 @@ const Auth = () => {
     checkSession();
   }, [navigate]);
 
-  const handleSocialLogin = async (provider: 'github' | 'google') => {
+  const handleSocialLogin = async (provider: 'github' | 'linkedin_oidc') => {
     try {
       setLoading(true);
       
@@ -160,12 +160,12 @@ const Auth = () => {
           <Button 
             type="button" 
             variant="outline" 
-            onClick={() => handleSocialLogin('google')}
+            onClick={() => handleSocialLogin('linkedin_oidc')}
             className="flex-1" 
             disabled={loading}
           >
-            <CircleUserIcon className="h-4 w-4 mr-2" />
-            Google
+            <LinkedinIcon className="h-4 w-4 mr-2" />
+            LinkedIn
           </Button>
           <Button 
             type="button" 
