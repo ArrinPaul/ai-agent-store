@@ -15,7 +15,7 @@ import {
   XIcon, 
   GithubIcon,
   MailIcon,
-  LinkedinIcon,
+  DiscordIcon,
   AlertCircleIcon 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -49,7 +49,7 @@ const Auth = () => {
     checkSession();
   }, [navigate]);
 
-  const handleSocialLogin = async (provider: 'github' | 'linkedin_oidc') => {
+  const handleSocialLogin = async (provider: 'github' | 'discord') => {
     try {
       setLoading(true);
       
@@ -160,12 +160,12 @@ const Auth = () => {
           <Button 
             type="button" 
             variant="outline" 
-            onClick={() => handleSocialLogin('linkedin_oidc')}
+            onClick={() => handleSocialLogin('discord')}
             className="flex-1" 
             disabled={loading}
           >
-            <LinkedinIcon className="h-4 w-4 mr-2" />
-            LinkedIn
+            <DiscordIcon className="h-4 w-4 mr-2" />
+            Discord
           </Button>
           <Button 
             type="button" 
