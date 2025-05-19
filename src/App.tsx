@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { UserProfileProvider } from "@/contexts/UserProfileContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MobileAppProvider } from "@/contexts/MobileAppContext";
 import PrivateRoute from "@/components/PrivateRoute";
@@ -29,7 +30,7 @@ const PageLoader = () => (
   </div>
 );
 
-// Create a client
+// Create a React Query client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -46,60 +47,62 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <AuthProvider>
-            <MobileAppProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner position="top-right" closeButton />
-                <MobileAppShell>
-                  <Suspense fallback={<PageLoader />}>
-                    <Routes>
-                      <Route path="/auth" element={<Auth />} />
-                      <Route
-                        path="/"
-                        element={
-                          <PrivateRoute>
-                            <Index />
-                          </PrivateRoute>
-                        }
-                      />
-                      <Route
-                        path="/profile"
-                        element={
-                          <PrivateRoute>
-                            <Profile />
-                          </PrivateRoute>
-                        }
-                      />
-                      <Route
-                        path="/apps"
-                        element={
-                          <PrivateRoute>
-                            <Apps />
-                          </PrivateRoute>
-                        }
-                      />
-                      <Route
-                        path="/apps/bookmarks"
-                        element={
-                          <PrivateRoute>
-                            <Apps />
-                          </PrivateRoute>
-                        }
-                      />
-                      <Route
-                        path="/apps/:appId"
-                        element={
-                          <PrivateRoute>
-                            <AppPreview />
-                          </PrivateRoute>
-                        }
-                      />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </Suspense>
-                </MobileAppShell>
-              </TooltipProvider>
-            </MobileAppProvider>
+            <UserProfileProvider>
+              <MobileAppProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner position="top-right" closeButton richColors />
+                  <MobileAppShell>
+                    <Suspense fallback={<PageLoader />}>
+                      <Routes>
+                        <Route path="/auth" element={<Auth />} />
+                        <Route
+                          path="/"
+                          element={
+                            <PrivateRoute>
+                              <Index />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/profile"
+                          element={
+                            <PrivateRoute>
+                              <Profile />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/apps"
+                          element={
+                            <PrivateRoute>
+                              <Apps />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/apps/bookmarks"
+                          element={
+                            <PrivateRoute>
+                              <Apps />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/apps/:appId"
+                          element={
+                            <PrivateRoute>
+                              <AppPreview />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Suspense>
+                  </MobileAppShell>
+                </TooltipProvider>
+              </MobileAppProvider>
+            </UserProfileProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>

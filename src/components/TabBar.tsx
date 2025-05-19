@@ -1,18 +1,30 @@
 
-import { Home, Grid, Bookmark, User } from "lucide-react";
+import { Home, Grid, Bookmark, User, Bell } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 
 const TabBar = () => {
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [showTabBar, setShowTabBar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [hasNotifications, setHasNotifications] = useState(false);
   
   useEffect(() => {
     setCurrentPath(location.pathname);
+    
+    // Simulate checking for notifications - in a real app this would come from a backend
+    const checkNotifications = async () => {
+      // This would be a real API call in production
+      setTimeout(() => {
+        setHasNotifications(Math.random() > 0.5);
+      }, 1000);
+    };
+    
+    checkNotifications();
   }, [location.pathname]);
   
   // Enhanced scroll handling with smoother transitions
@@ -45,7 +57,7 @@ const TabBar = () => {
       icon: Grid,
       label: "Apps",
       path: "/apps",
-      active: currentPath === "/apps" || currentPath.startsWith("/apps/") && !currentPath.includes("bookmarks")
+      active: currentPath === "/apps" || (currentPath.startsWith("/apps/") && !currentPath.includes("bookmarks"))
     },
     {
       icon: Bookmark,
@@ -85,14 +97,24 @@ const TabBar = () => {
                   : "text-muted-foreground hover:text-foreground active:scale-95"
               )}
             >
-              <div className={cn(
-                "p-2 rounded-full transition-colors duration-300",
-                tab.active ? "bg-primary/10 scale-110" : "hover:bg-background/90 active:bg-primary/5"
-              )}>
-                <tab.icon className={cn(
-                  "h-5 w-5 transition-all duration-300",
-                  tab.active ? "text-primary" : "text-muted-foreground"
-                )} />
+              <div className="relative">
+                <div className={cn(
+                  "p-2 rounded-full transition-colors duration-300",
+                  tab.active ? "bg-primary/10 scale-110" : "hover:bg-background/90 active:bg-primary/5"
+                )}>
+                  <tab.icon className={cn(
+                    "h-5 w-5 transition-all duration-300",
+                    tab.active ? "text-primary" : "text-muted-foreground"
+                  )} />
+                  
+                  {/* Notification indicator */}
+                  {tab.label === "Profile" && hasNotifications && (
+                    <Badge 
+                      className="absolute -top-1 -right-1 w-2 h-2 p-0 bg-red-500"
+                      variant="destructive" 
+                    />
+                  )}
+                </div>
               </div>
               <span className={cn(
                 "text-xs font-medium transition-all duration-300",
