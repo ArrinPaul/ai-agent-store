@@ -3,26 +3,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader } from "@/components/ui/loader";
-import { 
-  EyeIcon, 
-  EyeOffIcon, 
-  ArrowLeftIcon, 
-  CheckIcon, 
-  XIcon, 
-  GithubIcon,
-  MailIcon,
-  MessageSquare, 
-  AlertCircleIcon 
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthForgotPassword from "@/components/auth/AuthForgotPassword";
 import AuthLoginForm from "@/components/auth/AuthLoginForm";
 import AuthSignupForm from "@/components/auth/AuthSignupForm";
+import AuthHeader from "@/components/auth/AuthHeader";
+import AuthDivider from "@/components/auth/AuthDivider";
+import AuthFooter from "@/components/auth/AuthFooter";
+import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
+import AuthToggleButton from "@/components/auth/AuthToggleButton";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -125,15 +114,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 overflow-x-hidden">
       <div className="w-full max-w-md p-6 sm:p-8 glass-effect rounded-xl shadow-card animate-fadeIn">
-        <motion.h1 
-          className="text-2xl sm:text-3xl font-bold text-center mb-8"
-          key={`${isForgotPassword}-${isSignUp}`}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {isSignUp ? "Create Account" : "Welcome Back"}
-        </motion.h1>
+        <AuthHeader title={isSignUp ? "Create Account" : "Welcome Back"} />
         
         <AnimatePresence mode="wait">
           {isSignUp ? (
@@ -160,65 +141,23 @@ const Auth = () => {
           )}
         </AnimatePresence>
 
-        <div className="relative mt-6">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
+        <AuthDivider text="Or continue with" />
         
-        <div className="grid grid-cols-2 gap-3 mt-6">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => handleSocialLogin('discord')}
-            className="flex-1" 
-            disabled={loading}
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Discord
-          </Button>
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => handleSocialLogin('github')}
-            className="flex-1" 
-            disabled={loading}
-          >
-            <GithubIcon className="h-4 w-4 mr-2" />
-            GitHub
-          </Button>
-        </div>
+        <SocialLoginButtons 
+          loading={loading} 
+          handleSocialLogin={handleSocialLogin} 
+        />
 
-        <div className="relative mt-6">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-background px-2 text-muted-foreground">
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}
-            </span>
-          </div>
-        </div>
+        <AuthDivider text={isSignUp ? "Already have an account?" : "Don't have an account?"} />
 
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="w-full mt-6"
-          disabled={loading}
-        >
-          {isSignUp ? "Sign In Instead" : "Create Account"}
-        </Button>
+        <AuthToggleButton 
+          isSignUp={isSignUp} 
+          loading={loading} 
+          onToggle={() => setIsSignUp(!isSignUp)} 
+        />
       </div>
       
-      <p className="mt-8 text-sm text-muted-foreground">
-        AI Agent Store &copy; {new Date().getFullYear()}
-      </p>
+      <AuthFooter />
     </div>
   );
 };
