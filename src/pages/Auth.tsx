@@ -15,7 +15,7 @@ import {
   XIcon, 
   GithubIcon,
   MailIcon,
-  DiscordIcon,
+  MessageSquare, // Using MessageSquare icon instead as a representation for Discord
   AlertCircleIcon 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -164,7 +164,7 @@ const Auth = () => {
             className="flex-1" 
             disabled={loading}
           >
-            <DiscordIcon className="h-4 w-4 mr-2" />
+            <MessageSquare className="h-4 w-4 mr-2" />
             Discord
           </Button>
           <Button 
