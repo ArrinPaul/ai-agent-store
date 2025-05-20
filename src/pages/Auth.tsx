@@ -15,7 +15,7 @@ import {
   XIcon, 
   GithubIcon,
   MailIcon,
-  MessageSquare, // Using MessageSquare icon instead as a representation for Discord
+  MessageSquare, 
   AlertCircleIcon 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -47,13 +47,20 @@ const Auth = () => {
     };
     
     checkSession();
+    
+    // Check for authentication error in URL
+    const error = params.get("error");
+    const error_description = params.get("error_description");
+    if (error && error_description) {
+      toast.error(`Authentication error: ${error_description}`);
+    }
   }, [navigate]);
 
   const handleSocialLogin = async (provider: 'github' | 'discord') => {
     try {
       setLoading(true);
       
-      // Clean up any existing auth state
+      // Thorough cleanup of auth state
       cleanupAuthState();
       
       // Try signing out first to prevent any auth state issues
@@ -61,18 +68,26 @@ const Auth = () => {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
         // Continue even if this fails
+        console.error("Error during signout before social login:", err);
       }
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: window.location.origin,
+          queryParams: provider === 'github' ? {
+            // Optional GitHub-specific params to request specific scopes
+            // Uncomment if needed
+            // scope: 'repo gist'
+          } : undefined
         },
       });
       
       if (error) throw error;
+      
+      // We don't need to set loading to false here since we're redirecting
     } catch (error: any) {
-      toast.error(error.message || "Error signing in with social provider");
+      toast.error(error.message || `Error signing in with ${provider}`);
       setLoading(false);
     }
   };

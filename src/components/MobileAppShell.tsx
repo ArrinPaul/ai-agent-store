@@ -1,6 +1,6 @@
 
 import { ReactNode, useEffect, useState, memo } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import TabBar from "@/components/TabBar";
@@ -13,7 +13,8 @@ interface MobileAppShellProps {
 
 const MobileAppShell = memo(({ children }: MobileAppShellProps) => {
   const location = useLocation();
-  const { session } = useAuth();
+  const navigate = useNavigate();
+  const { session, loading, isAuthenticated } = useAuth();
   const [showNav, setShowNav] = useState(true);
   const [showTabBar, setShowTabBar] = useState(true);
   
@@ -25,6 +26,14 @@ const MobileAppShell = memo(({ children }: MobileAppShellProps) => {
     setShowNav(shouldShowNav);
     setShowTabBar(shouldShowNav);
   }, [location.pathname]);
+
+  // Handle authentication state changes
+  useEffect(() => {
+    if (!loading && !isAuthenticated && location.pathname !== "/auth") {
+      // Redirect to auth page if not authenticated
+      navigate("/auth");
+    }
+  }, [loading, isAuthenticated, location.pathname, navigate]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
