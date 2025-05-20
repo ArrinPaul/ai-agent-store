@@ -19,6 +19,11 @@ declare global {
   interface WindowEventMap {
     'beforeinstallprompt': BeforeInstallPromptEvent;
   }
+  
+  // Add MSStream to the Window interface
+  interface Window {
+    MSStream?: any;
+  }
 }
 
 const InstallPrompt = () => {
