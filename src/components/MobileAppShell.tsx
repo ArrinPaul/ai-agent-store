@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import TabBar from "@/components/TabBar";
 import OfflineIndicator from "@/components/OfflineIndicator";
+import InstallPrompt from "@/components/InstallPrompt";
 
 interface MobileAppShellProps {
   children: ReactNode;
@@ -29,11 +30,12 @@ const MobileAppShell = memo(({ children }: MobileAppShellProps) => {
     <div className="min-h-screen bg-background flex flex-col">
       {showNav && session && <Navigation />}
       
-      <main className={`flex-1 ${showNav && session ? "pt-16" : ""}`}>
+      <main className={`flex-1 ${showNav && session ? "pt-16" : ""} pb-16`}>
         {children}
       </main>
       
       <OfflineIndicator />
+      <InstallPrompt />
       {showTabBar && session && <TabBar />}
     </div>
   );

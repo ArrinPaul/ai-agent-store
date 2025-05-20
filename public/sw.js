@@ -6,7 +6,10 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.ico'
+  '/favicon.ico',
+  '/icon-192x192.png',
+  '/icon-512x512.png',
+  '/apple-touch-icon.png'
 ];
 
 // Install a service worker
@@ -14,9 +17,12 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
+        console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
   );
+  // Activate immediately
+  self.skipWaiting();
 });
 
 // Cache and return requests
@@ -28,7 +34,11 @@ self.addEventListener('fetch', event => {
         if (response) {
           return response;
         }
-        return fetch(event.request).then(
+        
+        // Clone the request
+        const fetchRequest = event.request.clone();
+        
+        return fetch(fetchRequest).then(
           response => {
             // Don't cache if it's not a valid response or if it's not a GET request
             if (!response || response.status !== 200 || event.request.method !== 'GET') {
@@ -49,7 +59,12 @@ self.addEventListener('fetch', event => {
       })
       .catch(() => {
         // If both cache and network fail, return a simple offline page
-        // In a real app, you would have a dedicated offline.html page
+        if (event.request.url.indexOf('.html') > -1 || 
+            event.request.url === '/' || 
+            event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+        
         return new Response('You are offline. Please check your connection.', {
           headers: { 'Content-Type': 'text/plain' }
         });
@@ -67,8 +82,18 @@ self.addEventListener('activate', event => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
             return caches.delete(cacheName);
           }
+          return null;
         })
       );
     })
   );
+  // Claim clients
+  self.clients.claim();
+});
+
+// Handle connectivity changes
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

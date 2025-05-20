@@ -1,5 +1,5 @@
 
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MobileAppProvider } from "@/contexts/MobileAppContext";
 import PrivateRoute from "@/components/PrivateRoute";
 import MobileAppShell from "@/components/MobileAppShell";
+import "./App.css";
 
 // Lazy loaded components
 const Auth = lazy(() => import("./pages/Auth"));
@@ -42,6 +43,51 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  // Handle platform-specific behaviors
+  useEffect(() => {
+    // Check if running on iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    if (isIOS) {
+      document.documentElement.classList.add('ios');
+    }
+    
+    // Check if running on Android
+    const isAndroid = /android/i.test(navigator.userAgent);
+    if (isAndroid) {
+      document.documentElement.classList.add('android');
+    }
+    
+    // Check if running as installed PWA
+    const isStandalone = 'standalone' in window.navigator && (window.navigator as any).standalone === true;
+    const displayMode = window.matchMedia('(display-mode: standalone)').matches;
+    if (isStandalone || displayMode) {
+      document.documentElement.classList.add('standalone-pwa');
+    }
+    
+    // Add class for capacitor
+    if (window.location.href.includes('capacitor://')) {
+      document.documentElement.classList.add('capacitor-app');
+    }
+    
+    // Handle app back button for Android
+    document.addEventListener('backbutton', (e) => {
+      // Prevent default behavior
+      e.preventDefault();
+      
+      // Custom back behavior
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // If no history, show exit confirmation
+        if (confirm("Do you want to exit the app?")) {
+          // In a real Capacitor app, we would use App.exitApp()
+          // For PWA, we can't actually exit
+          console.log("Exit app requested");
+        }
+      }
+    });
+  }, []);
+
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>

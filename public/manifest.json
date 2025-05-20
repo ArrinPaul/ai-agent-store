@@ -11,12 +11,14 @@
     {
       "src": "icon-192x192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512x512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/?source=pwa",
@@ -25,5 +27,19 @@
   "background_color": "#000000",
   "orientation": "portrait",
   "scope": "/",
-  "description": "Find and use AI agents for your daily tasks"
+  "description": "Find and use AI agents for your daily tasks",
+  "screenshots": [
+    {
+      "src": "screenshot1.jpg",
+      "type": "image/jpeg",
+      "sizes": "1080x2340"
+    },
+    {
+      "src": "screenshot2.jpg",
+      "type": "image/jpeg",
+      "sizes": "1080x2340"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }
