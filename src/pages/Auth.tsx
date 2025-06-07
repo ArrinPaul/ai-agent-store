@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +9,7 @@ import AuthSignupForm from "@/components/auth/AuthSignupForm";
 import AuthHeader from "@/components/auth/AuthHeader";
 import AuthDivider from "@/components/auth/AuthDivider";
 import AuthFooter from "@/components/auth/AuthFooter";
+import AuthSkeleton from "@/components/auth/AuthSkeleton";
 import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
 import AuthToggleButton from "@/components/auth/AuthToggleButton";
 
@@ -17,6 +17,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ const Auth = () => {
       if (data.session) {
         navigate("/");
       }
+      setInitializing(false);
     };
     
     checkSession();
@@ -98,6 +100,15 @@ const Auth = () => {
       }
     });
   };
+
+  if (initializing) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 overflow-x-hidden">
+        <AuthSkeleton />
+        <AuthFooter />
+      </div>
+    );
+  }
 
   if (isForgotPassword) {
     return (

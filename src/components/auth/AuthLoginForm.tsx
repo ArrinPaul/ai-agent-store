@@ -1,14 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
 // Imported components
 import EmailField from "./form/EmailField";
 import PasswordField from "./form/PasswordField";
 import AuthButtons from "./form/AuthButtons";
+import AuthErrorDisplay from "./AuthErrorDisplay";
+import AuthSuccessAnimation from "./AuthSuccessAnimation";
+import RememberMeCheckbox from "./RememberMeCheckbox";
 
 // Hooks and services
 import useAuthValidation from "@/hooks/useAuthValidation";
@@ -37,9 +40,13 @@ const AuthLoginForm = ({
 }: AuthLoginFormProps) => {
   const navigate = useNavigate();
   const { validateEmail, validatePassword } = useAuthValidation();
+  const [error, setError] = useState<string>("");
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     
     // Validate inputs
     if (!validateEmail(email) || !validatePassword(password)) {
@@ -53,7 +60,7 @@ const AuthLoginForm = ({
       const attemptCount = await handleLoginAttempt(email);
       
       if (attemptCount && attemptCount >= 5) {
-        toast.error("Too many failed attempts. Please try again later or reset your password.");
+        setError("Too many failed attempts. Please try again later or reset your password.");
         setLoading(false);
         return;
       }
@@ -62,49 +69,87 @@ const AuthLoginForm = ({
       try {
         await signInWithEmailPassword(email, password);
         await resetLoginAttempts(email);
-        toast.success("Successfully signed in!");
-        navigate("/");
+        
+        // Show success animation
+        setShowSuccess(true);
+        
+        // Handle remember me option
+        if (rememberMe) {
+          localStorage.setItem('remember_me', 'true');
+        }
+        
+        setTimeout(() => {
+          toast.success("Successfully signed in!");
+          navigate("/");
+        }, 1500);
       } catch (error: any) {
         if (error.message === "Invalid login credentials") {
-          toast.error(`Invalid email or password. ${attemptCount ? 5 - attemptCount : 4} attempts remaining.`);
+          setError(`Invalid email or password. ${attemptCount ? 5 - attemptCount : 4} attempts remaining.`);
         } else {
           throw error;
         }
       }
     } catch (error: any) {
-      toast.error(error.message);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <motion.div
-      className="space-y-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-    >
-      <form onSubmit={handleLogin} className="space-y-6">
-        <EmailField 
-          email={email} 
-          setEmail={setEmail} 
-          loading={loading} 
-        />
-        
-        <PasswordField 
-          password={password} 
-          setPassword={setPassword} 
-          loading={loading} 
-        />
+  const handleRetry = () => {
+    setError("");
+    handleLogin(new Event('submit') as any);
+  };
 
-        <AuthButtons 
-          loading={loading} 
-          setIsForgotPassword={setIsForgotPassword} 
-        />
-      </form>
-    </motion.div>
+  return (
+    <>
+      <motion.div
+        className="space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+      >
+        <form onSubmit={handleLogin} className="space-y-6">
+          <AnimatePresence>
+            {error && (
+              <AuthErrorDisplay
+                error={error}
+                onRetry={handleRetry}
+              />
+            )}
+          </AnimatePresence>
+
+          <EmailField 
+            email={email} 
+            setEmail={setEmail} 
+            loading={loading} 
+          />
+          
+          <PasswordField 
+            password={password} 
+            setPassword={setPassword} 
+            loading={loading} 
+          />
+
+          <RememberMeCheckbox
+            checked={rememberMe}
+            onCheckedChange={setRememberMe}
+            disabled={loading}
+          />
+
+          <AuthButtons 
+            loading={loading} 
+            setIsForgotPassword={setIsForgotPassword} 
+          />
+        </form>
+      </motion.div>
+
+      <AuthSuccessAnimation
+        message="Welcome back!"
+        show={showSuccess}
+      />
+    </>
   );
 };
 
