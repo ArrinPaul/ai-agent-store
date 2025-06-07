@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,7 +48,7 @@ const Auth = () => {
     }
   }, [navigate]);
 
-  const handleSocialLogin = async (provider: 'github' | 'discord') => {
+  const handleSocialLogin = async (provider: 'github' | 'discord' | 'apple' | 'twitter') => {
     try {
       setLoading(true);
       
@@ -100,6 +101,35 @@ const Auth = () => {
       }
     });
   };
+
+  // Keyboard navigation enhancement
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow ESC to clear forms or go back
+      if (e.key === 'Escape') {
+        if (isForgotPassword) {
+          setIsForgotPassword(false);
+        } else {
+          setEmail("");
+          setPassword("");
+        }
+      }
+      
+      // Allow Ctrl+Enter to submit forms
+      if (e.ctrlKey && e.key === 'Enter') {
+        const activeForm = document.querySelector('form');
+        if (activeForm) {
+          const submitButton = activeForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+          if (submitButton && !submitButton.disabled) {
+            submitButton.click();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isForgotPassword]);
 
   if (initializing) {
     return (
@@ -169,6 +199,12 @@ const Auth = () => {
       </div>
       
       <AuthFooter />
+      
+      {/* Accessibility announcement for screen readers */}
+      <div className="sr-only" aria-live="polite" id="auth-announcements">
+        {loading ? "Processing authentication..." : ""}
+        {isSignUp ? "Sign up form active" : "Sign in form active"}
+      </div>
     </div>
   );
 };
