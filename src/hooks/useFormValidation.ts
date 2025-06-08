@@ -1,103 +1,96 @@
 
 import { useState, useCallback } from 'react';
 
-interface ValidationRules {
-  email?: {
-    required?: boolean;
-    pattern?: RegExp;
-  };
-  password?: {
-    required?: boolean;
-    minLength?: number;
-    requireNumber?: boolean;
-    requireSpecial?: boolean;
-    requireUppercase?: boolean;
-    requireLowercase?: boolean;
-  };
+interface ValidationRule {
+  test: (value: string) => boolean;
+  message: string;
 }
 
 interface ValidationResult {
   isValid: boolean;
   message: string;
-  type: 'error' | 'success' | 'info';
 }
 
 export const useFormValidation = () => {
-  const [validationResults, setValidationResults] = useState<Record<string, ValidationResult>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const validateField = useCallback((fieldName: string, value: string, rules: ValidationRules) => {
-    let result: ValidationResult = { isValid: true, message: '', type: 'success' };
-
-    if (fieldName === 'email' && rules.email) {
-      if (rules.email.required && !value) {
-        result = { isValid: false, message: 'Email is required', type: 'error' };
-      } else if (value && rules.email.pattern && !rules.email.pattern.test(value)) {
-        result = { isValid: false, message: 'Please enter a valid email address', type: 'error' };
-      } else if (value && rules.email.pattern && rules.email.pattern.test(value)) {
-        result = { isValid: true, message: 'Valid email address', type: 'success' };
+  const validateField = useCallback((
+    fieldName: string,
+    value: string,
+    rules: ValidationRule[]
+  ): ValidationResult => {
+    for (const rule of rules) {
+      if (!rule.test(value)) {
+        const error = { [fieldName]: rule.message };
+        setErrors(prev => ({ ...prev, ...error }));
+        return { isValid: false, message: rule.message };
       }
     }
-
-    if (fieldName === 'password' && rules.password) {
-      if (rules.password.required && !value) {
-        result = { isValid: false, message: 'Password is required', type: 'error' };
-      } else if (value) {
-        const issues = [];
-        
-        if (rules.password.minLength && value.length < rules.password.minLength) {
-          issues.push(`at least ${rules.password.minLength} characters`);
-        }
-        if (rules.password.requireNumber && !/\d/.test(value)) {
-          issues.push('a number');
-        }
-        if (rules.password.requireSpecial && !/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
-          issues.push('a special character');
-        }
-        if (rules.password.requireUppercase && !/[A-Z]/.test(value)) {
-          issues.push('an uppercase letter');
-        }
-        if (rules.password.requireLowercase && !/[a-z]/.test(value)) {
-          issues.push('a lowercase letter');
-        }
-
-        if (issues.length > 0) {
-          result = { 
-            isValid: false, 
-            message: `Password needs ${issues.join(', ')}`, 
-            type: 'error' 
-          };
-        } else {
-          result = { isValid: true, message: 'Strong password', type: 'success' };
-        }
-      }
-    }
-
-    setValidationResults(prev => ({
-      ...prev,
-      [fieldName]: result
-    }));
-
-    return result;
+    
+    // Clear error if validation passes
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[fieldName];
+      return newErrors;
+    });
+    
+    return { isValid: true, message: '' };
   }, []);
 
-  const getValidationResult = useCallback((fieldName: string) => {
-    return validationResults[fieldName];
-  }, [validationResults]);
+  const clearError = useCallback((fieldName: string) => {
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[fieldName];
+      return newErrors;
+    });
+  }, []);
 
-  const clearValidation = useCallback((fieldName?: string) => {
-    if (fieldName) {
-      setValidationResults(prev => {
-        const { [fieldName]: removed, ...rest } = prev;
-        return rest;
-      });
-    } else {
-      setValidationResults({});
-    }
+  const clearAllErrors = useCallback(() => {
+    setErrors({});
   }, []);
 
   return {
+    errors,
     validateField,
-    getValidationResult,
-    clearValidation,
+    clearError,
+    clearAllErrors
   };
+};
+
+// Common validation rules
+export const validationRules = {
+  email: {
+    test: (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+    message: 'Please enter a valid email address'
+  },
+  
+  passwordLength: {
+    test: (value: string) => value.length >= 8,
+    message: 'Password must be at least 8 characters long'
+  },
+  
+  passwordUppercase: {
+    test: (value: string) => /[A-Z]/.test(value),
+    message: 'Password must contain at least one uppercase letter'
+  },
+  
+  passwordLowercase: {
+    test: (value: string) => /[a-z]/.test(value),
+    message: 'Password must contain at least one lowercase letter'
+  },
+  
+  passwordNumber: {
+    test: (value: string) => /\d/.test(value),
+    message: 'Password must contain at least one number'
+  },
+  
+  passwordSpecial: {
+    test: (value: string) => /[!@#$%^&*(),.?":{}|<>]/.test(value),
+    message: 'Password must contain at least one special character'
+  },
+  
+  required: {
+    test: (value: string) => value.trim().length > 0,
+    message: 'This field is required'
+  }
 };

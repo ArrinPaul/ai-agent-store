@@ -1,75 +1,41 @@
 
-import React, { useState } from 'react';
-import { Label } from "@/components/ui/label";
+import React from 'react';
 import { Input } from "@/components/ui/input";
-import { MailIcon } from "lucide-react";
-import { useFormValidation } from "@/hooks/useFormValidation";
-import ValidationMessage from "./FormValidation";
+import { Label } from "@/components/ui/label";
+import { Mail } from "lucide-react";
 
 interface EmailFieldProps {
   email: string;
   setEmail: React.Dispatch<React.SetStateAction<string>>;
-  loading: boolean;
+  loading?: boolean;
+  error?: string;
 }
 
-const EmailField = ({ email, setEmail, loading }: EmailFieldProps) => {
-  const { validateField, getValidationResult } = useFormValidation();
-  const [touched, setTouched] = useState(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.trim();
-    setEmail(value);
-    
-    if (touched || value) {
-      validateField('email', value, {
-        email: {
-          required: true,
-          pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        }
-      });
-    }
-  };
-
-  const handleBlur = () => {
-    setTouched(true);
-    validateField('email', email, {
-      email: {
-        required: true,
-        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      }
-    });
-  };
-
-  const validationResult = getValidationResult('email');
-
+const EmailField = ({ email, setEmail, loading = false, error }: EmailFieldProps) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor="email">Email</Label>
+      <Label htmlFor="email" className="text-sm font-medium">
+        Email Address
+      </Label>
       <div className="relative">
+        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           id="email"
           type="email"
+          placeholder="Enter your email"
           value={email}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          placeholder="your@email.com"
+          onChange={(e) => setEmail(e.target.value)}
           disabled={loading}
-          required
-          className="bg-secondary/50 pl-10"
-          aria-describedby={validationResult ? "email-validation" : undefined}
+          className={`pl-10 ${error ? 'border-destructive' : ''}`}
           autoComplete="email"
+          aria-describedby={error ? "email-error" : undefined}
+          aria-invalid={error ? "true" : "false"}
         />
-        <MailIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       </div>
-      
-      {validationResult && touched && (
-        <div id="email-validation">
-          <ValidationMessage
-            message={validationResult.message}
-            type={validationResult.type}
-            show={true}
-          />
-        </div>
+      {error && (
+        <p id="email-error" className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
       )}
     </div>
   );
