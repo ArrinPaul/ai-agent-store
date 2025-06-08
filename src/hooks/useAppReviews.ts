@@ -36,7 +36,24 @@ export const useAppReviews = (appId: string) => {
         if (error) {
           console.error('Error loading reviews:', error);
         } else {
-          setReviews(data || []);
+          // Map the database schema to our AppReview interface
+          const mappedReviews: AppReview[] = (data || []).map(review => ({
+            id: review.id,
+            app_id: review.app_id || '',
+            user_id: review.user_id || '',
+            user_name: 'Anonymous User', // Default since not in current schema
+            user_avatar: undefined,
+            rating: review.rating || 0,
+            title: undefined,
+            content: review.comment || '',
+            helpful_count: review.helpful_count || 0,
+            is_verified_purchase: false, // Default since not in current schema
+            developer_response: undefined,
+            developer_response_date: undefined,
+            created_at: review.created_at || new Date().toISOString(),
+            updated_at: review.updated_at || review.created_at || new Date().toISOString()
+          }));
+          setReviews(mappedReviews);
         }
       } catch (error) {
         console.error('Error loading reviews:', error);
@@ -52,7 +69,10 @@ export const useAppReviews = (appId: string) => {
 
   const addReview = async (rating: number, title?: string, content?: string) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+    if (!user) {
+      console.log('User not authenticated');
+      return false;
+    }
 
     try {
       const { error } = await supabase
@@ -60,10 +80,8 @@ export const useAppReviews = (appId: string) => {
         .insert([{
           app_id: appId,
           user_id: user.id,
-          user_name: user.email?.split('@')[0] || 'Anonymous',
           rating,
-          title,
-          content
+          comment: content || '' // Map content to comment field
         }]);
 
       if (error) {
@@ -78,7 +96,25 @@ export const useAppReviews = (appId: string) => {
         .eq('app_id', appId)
         .order('created_at', { ascending: false });
 
-      setReviews(data || []);
+      if (data) {
+        const mappedReviews: AppReview[] = data.map(review => ({
+          id: review.id,
+          app_id: review.app_id || '',
+          user_id: review.user_id || '',
+          user_name: 'Anonymous User',
+          user_avatar: undefined,
+          rating: review.rating || 0,
+          title: undefined,
+          content: review.comment || '',
+          helpful_count: review.helpful_count || 0,
+          is_verified_purchase: false,
+          developer_response: undefined,
+          developer_response_date: undefined,
+          created_at: review.created_at || new Date().toISOString(),
+          updated_at: review.updated_at || review.created_at || new Date().toISOString()
+        }));
+        setReviews(mappedReviews);
+      }
       return true;
     } catch (error) {
       console.error('Error adding review:', error);

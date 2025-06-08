@@ -8,76 +8,72 @@ export const useAppStore = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Mock categories since the table doesn't exist yet
+  const mockCategories: Category[] = [
+    { id: 'photography', name: 'Photography', icon: '📸', color: 'bg-blue-100 text-blue-600', app_count: 0 },
+    { id: 'health', name: 'Health & Fitness', icon: '💪', color: 'bg-green-100 text-green-600', app_count: 0 },
+    { id: 'weather', name: 'Weather', icon: '🌤️', color: 'bg-yellow-100 text-yellow-600', app_count: 0 },
+    { id: 'games', name: 'Games', icon: '🎮', color: 'bg-purple-100 text-purple-600', app_count: 0 },
+    { id: 'productivity', name: 'Productivity', icon: '📊', color: 'bg-indigo-100 text-indigo-600', app_count: 0 },
+    { id: 'social', name: 'Social', icon: '👥', color: 'bg-pink-100 text-pink-600', app_count: 0 },
+    { id: 'music', name: 'Music', icon: '🎵', color: 'bg-red-100 text-red-600', app_count: 0 },
+    { id: 'education', name: 'Education', icon: '🎓', color: 'bg-teal-100 text-teal-600', app_count: 0 }
+  ];
+
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         
-        // Fetch categories from Supabase
-        const { data: categoriesData, error: categoriesError } = await supabase
-          .from('categories')
-          .select('*')
-          .order('name');
+        // Set mock categories
+        setCategories(mockCategories);
 
-        if (categoriesError) {
-          console.error('Error loading categories:', categoriesError);
-        } else if (categoriesData) {
-          const mappedCategories: Category[] = categoriesData.map(cat => ({
-            id: cat.id,
-            name: cat.name,
-            icon: cat.icon,
-            color: cat.color,
-            app_count: cat.app_count || 0
-          }));
-          setCategories(mappedCategories);
-        }
-
-        // Fetch apps from Supabase
+        // Fetch apps from the existing apps table
         const { data: appsData, error: appsError } = await supabase
           .from('apps')
           .select('*')
-          .eq('status', 'published')
           .order('created_at', { ascending: false });
 
         if (appsError) {
           console.error('Error loading apps:', appsError);
         } else if (appsData) {
+          // Map the existing database schema to our App interface
           const mappedApps: App[] = appsData.map(app => ({
             id: app.id,
             name: app.name,
             description: app.description || '',
-            short_description: app.short_description || '',
-            icon_url: app.icon_url || '/placeholder.svg',
-            screenshots: app.screenshots || [],
-            video_url: app.video_url,
-            category: app.category || '',
-            subcategory: app.subcategory,
-            developer_id: app.developer_id || '',
-            developer_name: app.developer_name,
-            version: app.version || '1.0.0',
-            size: app.size || '0 MB',
+            short_description: app.description || '', // Use description as short_description
+            icon_url: app.image_url || '/placeholder.svg', // Map image_url to icon_url
+            screenshots: [app.image_url || '/placeholder.svg'], // Use image_url as screenshot
+            video_url: undefined,
+            category: app.category || 'other',
+            subcategory: undefined,
+            developer_id: app.creator_id || '',
+            developer_name: 'Developer', // Default name since not in schema
+            version: '1.0.0',
+            size: '10 MB',
             rating: Number(app.rating) || 0,
-            review_count: app.review_count || 0,
-            download_count: app.download_count || 0,
-            price: Number(app.price) || 0,
-            is_free: app.is_free ?? true,
-            is_featured: app.is_featured ?? false,
-            is_editors_choice: app.is_editors_choice ?? false,
-            tags: app.tags || [],
-            compatibility: app.compatibility || [],
-            languages: app.languages || ['English'],
-            age_rating: app.age_rating || '4+',
-            content_rating: app.content_rating || 'Everyone',
-            privacy_policy_url: app.privacy_policy_url,
-            support_url: app.support_url,
-            website_url: app.website_url,
-            release_date: app.release_date || app.created_at,
-            last_updated: app.last_updated || app.updated_at,
-            whats_new: app.whats_new || 'Initial release',
-            permissions: app.permissions || [],
-            status: app.status as 'published' | 'pending' | 'rejected' | 'draft',
-            created_at: app.created_at,
-            updated_at: app.updated_at
+            review_count: 0, // Default since not in schema
+            download_count: app.downloads || 0,
+            price: 0,
+            is_free: true,
+            is_featured: app.featured || false,
+            is_editors_choice: false,
+            tags: [],
+            compatibility: ['Web'],
+            languages: ['English'],
+            age_rating: '4+',
+            content_rating: 'Everyone',
+            privacy_policy_url: undefined,
+            support_url: undefined,
+            website_url: undefined,
+            release_date: app.created_at || new Date().toISOString(),
+            last_updated: app.updated_at || app.created_at || new Date().toISOString(),
+            whats_new: 'Latest update',
+            permissions: [],
+            status: 'published' as const,
+            created_at: app.created_at || new Date().toISOString(),
+            updated_at: app.updated_at || app.created_at || new Date().toISOString()
           }));
           setApps(mappedApps);
         }
@@ -95,12 +91,14 @@ export const useAppStore = () => {
 
   const addToFavorites = async (appId: string) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      console.log('User not authenticated');
+      return;
+    }
 
     try {
-      await supabase
-        .from('user_favorites')
-        .insert([{ user_id: user.id, app_id: appId }]);
+      // For now, just log since user_favorites table doesn't exist
+      console.log('Would add to favorites:', appId);
     } catch (error) {
       console.error('Error adding to favorites:', error);
     }
@@ -108,14 +106,14 @@ export const useAppStore = () => {
 
   const removeFromFavorites = async (appId: string) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      console.log('User not authenticated');
+      return;
+    }
 
     try {
-      await supabase
-        .from('user_favorites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('app_id', appId);
+      // For now, just log since user_favorites table doesn't exist
+      console.log('Would remove from favorites:', appId);
     } catch (error) {
       console.error('Error removing from favorites:', error);
     }
@@ -123,26 +121,26 @@ export const useAppStore = () => {
 
   const downloadApp = async (appId: string) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      console.log('User not authenticated');
+      return;
+    }
 
     try {
-      // Add to downloads
-      await supabase
-        .from('user_downloads')
-        .insert([{ user_id: user.id, app_id: appId }]);
-
-      // Update download count
-      const { data: app } = await supabase
-        .from('apps')
-        .select('download_count')
-        .eq('id', appId)
-        .single();
-
+      // Update download count in the existing apps table
+      const app = apps.find(a => a.id === appId);
       if (app) {
         await supabase
           .from('apps')
-          .update({ download_count: (app.download_count || 0) + 1 })
+          .update({ downloads: (app.download_count || 0) + 1 })
           .eq('id', appId);
+
+        // Update local state
+        setApps(prev => prev.map(a => 
+          a.id === appId 
+            ? { ...a, download_count: (a.download_count || 0) + 1 }
+            : a
+        ));
       }
     } catch (error) {
       console.error('Error downloading app:', error);
