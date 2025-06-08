@@ -18,10 +18,10 @@ const AppStoreContent = () => {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
-      // In a real app, this would be an API call
       const results = apps.filter(app => 
         app.name.toLowerCase().includes(query.toLowerCase()) ||
-        app.description.toLowerCase().includes(query.toLowerCase())
+        app.description.toLowerCase().includes(query.toLowerCase()) ||
+        app.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
       );
       setSearchResults(results);
       setSelectedCategory(null);
@@ -37,8 +37,8 @@ const AppStoreContent = () => {
   };
 
   const handleAppClick = (appId: string) => {
-    // Navigate to app detail page
     console.log('Navigate to app:', appId);
+    // TODO: Navigate to app detail page
   };
 
   if (loading) {
@@ -61,27 +61,35 @@ const AppStoreContent = () => {
     );
   }
 
+  const categoryApps = selectedCategory 
+    ? apps.filter(app => app.category === categories.find(c => c.id === selectedCategory)?.name)
+    : [];
+
   return (
     <div className="min-h-screen bg-background">
       <AppStoreHeader onSearch={handleSearch} searchQuery={searchQuery} />
       
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Search Results */}
-        {searchQuery && searchResults.length > 0 && (
+        {searchQuery && (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">
               Search Results for "{searchQuery}" ({searchResults.length})
             </h2>
-            <div className="space-y-3">
-              {searchResults.map((app) => (
-                <AppCard
-                  key={app.id}
-                  app={app}
-                  onClick={handleAppClick}
-                  variant="compact"
-                />
-              ))}
-            </div>
+            {searchResults.length > 0 ? (
+              <div className="space-y-3">
+                {searchResults.map((app) => (
+                  <AppCard
+                    key={app.id}
+                    app={app}
+                    onClick={handleAppClick}
+                    variant="compact"
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No apps found matching your search.</p>
+            )}
           </div>
         )}
 
@@ -89,12 +97,10 @@ const AppStoreContent = () => {
         {selectedCategory && (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">
-              {categories.find(c => c.id === selectedCategory)?.name} Apps
+              {categories.find(c => c.id === selectedCategory)?.name} Apps ({categoryApps.length})
             </h2>
             <div className="space-y-3">
-              {apps
-                .filter(app => app.category === categories.find(c => c.id === selectedCategory)?.name)
-                .map((app) => (
+              {categoryApps.map((app) => (
                 <AppCard
                   key={app.id}
                   app={app}
@@ -113,10 +119,12 @@ const AppStoreContent = () => {
               onCategoryClick={handleCategoryClick}
             />
 
-            <FeaturedSection
-              apps={featuredApps}
-              onAppClick={handleAppClick}
-            />
+            {featuredApps.length > 0 && (
+              <FeaturedSection
+                apps={featuredApps}
+                onAppClick={handleAppClick}
+              />
+            )}
 
             <div className="grid md:grid-cols-3 gap-6">
               <Card>
@@ -146,7 +154,10 @@ const AppStoreContent = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {apps.slice(1, 4).map((app) => (
+                  {apps
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                    .slice(0, 3)
+                    .map((app) => (
                     <AppCard
                       key={app.id}
                       app={app}
@@ -165,7 +176,10 @@ const AppStoreContent = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {apps.slice(0, 3).map((app, index) => (
+                  {apps
+                    .sort((a, b) => b.rating - a.rating)
+                    .slice(0, 3)
+                    .map((app, index) => (
                     <div key={app.id} className="flex items-center gap-3">
                       <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center font-bold">
                         {index + 1}

@@ -3,7 +3,10 @@ import { App } from '@/types/app';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, Download, Clock, Shield } from 'lucide-react';
+import { Star, Download, Clock, Shield, Heart } from 'lucide-react';
+import { useState } from 'react';
+import { useAppStore } from '@/hooks/useAppStore';
+import { toast } from 'sonner';
 
 interface AppCardProps {
   app: App;
@@ -12,6 +15,32 @@ interface AppCardProps {
 }
 
 const AppCard = ({ app, onClick, variant = 'default' }: AppCardProps) => {
+  const { downloadApp, addToFavorites } = useAppStore();
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDownloading(true);
+    try {
+      await downloadApp(app.id);
+      toast.success(`${app.name} downloaded successfully!`);
+    } catch (error) {
+      toast.error('Failed to download app');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await addToFavorites(app.id);
+      toast.success('Added to favorites!');
+    } catch (error) {
+      toast.error('Failed to add to favorites');
+    }
+  };
+
   if (variant === 'compact') {
     return (
       <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => onClick(app.id)}>
@@ -37,8 +66,13 @@ const AppCard = ({ app, onClick, variant = 'default' }: AppCardProps) => {
                 </span>
               </div>
             </div>
-            <Button size="sm" variant="outline">
-              {app.is_free ? 'Get' : 'Buy'}
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={handleDownload}
+              disabled={isDownloading}
+            >
+              {isDownloading ? 'Installing...' : app.is_free ? 'Get' : 'Buy'}
             </Button>
           </div>
         </CardContent>
@@ -72,9 +106,22 @@ const AppCard = ({ app, onClick, variant = 'default' }: AppCardProps) => {
                 <span className="font-semibold text-lg text-primary">
                   {app.is_free ? 'Free' : `$${app.price}`}
                 </span>
-                <Button size="sm">
-                  {app.is_free ? 'Install' : 'Buy'}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleFavorite}
+                  >
+                    <Heart className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={handleDownload}
+                    disabled={isDownloading}
+                  >
+                    {isDownloading ? 'Installing...' : app.is_free ? 'Install' : 'Buy'}
+                  </Button>
+                </div>
               </div>
             </div>
             
