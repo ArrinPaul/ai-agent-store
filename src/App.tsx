@@ -1,8 +1,6 @@
-
 import React, { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -95,60 +93,58 @@ function App() {
           <AuthProvider>
             <UserProfileProvider>
               <MobileAppProvider>
-                <TooltipProvider>
-                  <div className="min-h-screen flex w-full">
-                    <Toaster />
-                    <Sonner position="top-right" closeButton richColors />
-                    <MobileAppShell>
-                      <Suspense fallback={<PageLoader />}>
-                        <Routes>
-                          <Route path="/auth" element={<Auth />} />
-                          <Route
-                            path="/"
-                            element={
-                              <PrivateRoute>
-                                <Index />
-                              </PrivateRoute>
-                            }
-                          />
-                          <Route
-                            path="/profile"
-                            element={
-                              <PrivateRoute>
-                                <Profile />
-                              </PrivateRoute>
-                            }
-                          />
-                          <Route
-                            path="/apps"
-                            element={
-                              <PrivateRoute>
-                                <Apps />
-                              </PrivateRoute>
-                            }
-                          />
-                          <Route
-                            path="/apps/bookmarks"
-                            element={
-                              <PrivateRoute>
-                                <Apps />
-                              </PrivateRoute>
-                            }
-                          />
-                          <Route
-                            path="/apps/:appId"
-                            element={
-                              <PrivateRoute>
-                                <AppPreview />
-                              </PrivateRoute>
-                            }
-                          />
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                      </Suspense>
-                    </MobileAppShell>
-                  </div>
-                </TooltipProvider>
+                <div className="min-h-screen flex w-full">
+                  <Toaster />
+                  <Sonner position="top-right" closeButton richColors />
+                  <MobileAppShell>
+                    <Suspense fallback={<PageLoader />}>
+                      <Routes>
+                        <Route path="/auth" element={<Auth />} />
+                        <Route
+                          path="/"
+                          element={
+                            <PrivateRoute>
+                              <Index />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/profile"
+                          element={
+                            <PrivateRoute>
+                              <Profile />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/apps"
+                          element={
+                            <PrivateRoute>
+                              <Apps />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/apps/bookmarks"
+                          element={
+                            <PrivateRoute>
+                              <Apps />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/apps/:appId"
+                          element={
+                            <PrivateRoute>
+                              <AppPreview />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Suspense>
+                  </MobileAppShell>
+                </div>
               </MobileAppProvider>
             </UserProfileProvider>
           </AuthProvider>
