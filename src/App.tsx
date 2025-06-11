@@ -1,5 +1,5 @@
 
-import { Suspense, lazy, useEffect } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -89,8 +89,8 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <ThemeProvider>
           <AuthProvider>
             <UserProfileProvider>
@@ -151,8 +151,8 @@ function App() {
             </UserProfileProvider>
           </AuthProvider>
         </ThemeProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
