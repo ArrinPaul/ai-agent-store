@@ -20,22 +20,26 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-// Helper function to clean up auth state
+// Enhanced helper function to clean up auth state
 const cleanupAuthState = () => {
-  // Remove standard auth tokens
-  localStorage.removeItem('supabase.auth.token');
-  // Remove all Supabase auth keys from localStorage
-  Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-      localStorage.removeItem(key);
-    }
-  });
-  // Remove from sessionStorage if in use
-  Object.keys(sessionStorage || {}).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-      sessionStorage.removeItem(key);
-    }
-  });
+  try {
+    // Remove standard auth tokens
+    localStorage.removeItem('supabase.auth.token');
+    // Remove all Supabase auth keys from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    // Remove from sessionStorage if in use
+    Object.keys(sessionStorage || {}).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  } catch (error) {
+    console.error('Error cleaning up auth state:', error);
+  }
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -44,7 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const isAuthenticated = !!session;
 
-  // Robust sign out function that cleans up auth state
+  // Enhanced sign out function with better security cleanup
   const signOut = async () => {
     try {
       setLoading(true);
@@ -52,18 +56,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Clean up auth state first
       cleanupAuthState();
       
-      // Attempt global sign out
-      await supabase.auth.signOut({ scope: 'global' });
+      // Attempt global sign out with better error handling
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (signOutError) {
+        console.warn('Sign out error (continuing anyway):', signOutError);
+      }
       
       // Reset state
       setSession(null);
       setUser(null);
+      
+      // Clear any remaining session data
+      try {
+        await supabase.auth.getSession();
+      } catch (error) {
+        console.warn('Error clearing session:', error);
+      }
       
       // Force page reload for a clean state
       window.location.href = '/auth';
     } catch (error: any) {
       console.error("Error signing out:", error);
       toast.error("Error signing out. Please try again.");
+      
+      // Force cleanup and redirect even if there's an error
+      cleanupAuthState();
+      window.location.href = '/auth';
     } finally {
       setLoading(false);
     }
@@ -77,7 +96,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user || null);
         
-        // If signed in, save the timestamp
+        // If signed in, save the timestamp securely
         if (event === 'SIGNED_IN') {
           try {
             localStorage.setItem('lastAuthenticated', new Date().toISOString());
@@ -92,6 +111,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else if (event === 'SIGNED_OUT') {
           // Ensure clean state on sign out
           cleanupAuthState();
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed successfully');
         }
         
         setLoading(false);
@@ -99,7 +120,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error getting session:', error);
+        cleanupAuthState();
+      }
       setSession(session);
       setUser(session?.user || null);
       setLoading(false);

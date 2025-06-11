@@ -2,73 +2,97 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Lock, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
+import { validatePassword } from '@/services/authService';
+import ValidationMessage from './FormValidation';
 
 interface PasswordFieldProps {
   password: string;
-  setPassword: React.Dispatch<React.SetStateAction<string>>;
-  loading?: boolean;
-  error?: string;
+  setPassword: (password: string) => void;
   label?: string;
   placeholder?: string;
-  showStrength?: boolean;
+  disabled?: boolean;
+  showValidation?: boolean;
+  showStrengthMeter?: boolean;
 }
 
 const PasswordField = ({ 
   password, 
   setPassword, 
-  loading = false, 
-  error,
-  label = "Password",
+  label = "Password", 
   placeholder = "Enter your password",
-  showStrength = false
+  disabled = false,
+  showValidation = false,
+  showStrengthMeter = false
 }: PasswordFieldProps) => {
   const [showPassword, setShowPassword] = useState(false);
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
+  
+  const validation = validatePassword(password);
+  const hasPassword = password.length > 0;
+  
   return (
     <div className="space-y-2">
-      <Label htmlFor="password" className="text-sm font-medium">
+      <Label htmlFor="password" className="text-sm font-medium text-gray-700">
         {label}
       </Label>
       <div className="relative">
-        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
           id="password"
           type={showPassword ? "text" : "password"}
           placeholder={placeholder}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          disabled={loading}
-          className={`pl-10 pr-12 ${error ? 'border-destructive' : ''}`}
-          autoComplete={showStrength ? "new-password" : "current-password"}
-          aria-describedby={error ? "password-error" : undefined}
-          aria-invalid={error ? "true" : "false"}
+          disabled={disabled}
+          className={`pl-10 pr-10 ${showValidation && hasPassword && !validation.isValid ? 'border-red-500' : ''}`}
+          autoComplete={label.toLowerCase().includes('confirm') ? "new-password" : "current-password"}
+          required
         />
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="sm"
-          className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-          onClick={togglePasswordVisibility}
-          disabled={loading}
-          aria-label={showPassword ? "Hide password" : "Show password"}
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          disabled={disabled}
         >
-          {showPassword ? (
-            <EyeOff className="h-4 w-4" />
-          ) : (
-            <Eye className="h-4 w-4" />
-          )}
-        </Button>
+          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
       </div>
-      {error && (
-        <p id="password-error" className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
+      
+      {showValidation && hasPassword && !validation.isValid && (
+        <div className="space-y-1">
+          {validation.errors.map((error, index) => (
+            <ValidationMessage
+              key={index}
+              message={error}
+              type="error"
+              show={true}
+            />
+          ))}
+        </div>
+      )}
+      
+      {showStrengthMeter && hasPassword && (
+        <div className="space-y-1">
+          <div className="flex space-x-1">
+            {[1, 2, 3, 4].map((level) => (
+              <div
+                key={level}
+                className={`h-1 flex-1 rounded ${
+                  validation.errors.length <= 4 - level
+                    ? validation.errors.length === 0
+                      ? 'bg-green-500'
+                      : validation.errors.length <= 2
+                      ? 'bg-yellow-500'
+                      : 'bg-red-500'
+                    : 'bg-gray-200'
+                }`}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-gray-600">
+            Password strength: {validation.isValid ? 'Strong' : validation.errors.length <= 2 ? 'Medium' : 'Weak'}
+          </p>
+        </div>
       )}
     </div>
   );
