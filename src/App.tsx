@@ -89,14 +89,14 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen flex w-full">
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <ThemeProvider>
-            <AuthProvider>
-              <UserProfileProvider>
-                <MobileAppProvider>
-                  <TooltipProvider>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ThemeProvider>
+          <AuthProvider>
+            <UserProfileProvider>
+              <MobileAppProvider>
+                <TooltipProvider>
+                  <div className="min-h-screen flex w-full">
                     <Toaster />
                     <Sonner position="top-right" closeButton richColors />
                     <MobileAppShell>
@@ -147,14 +147,14 @@ function App() {
                         </Routes>
                       </Suspense>
                     </MobileAppShell>
-                  </TooltipProvider>
-                </MobileAppProvider>
-              </UserProfileProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </div>
+                  </div>
+                </TooltipProvider>
+              </MobileAppProvider>
+            </UserProfileProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
