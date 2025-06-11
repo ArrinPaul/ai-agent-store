@@ -1,5 +1,5 @@
 
-import React from 'react';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
@@ -72,12 +72,6 @@ const handleSwipeGesture = () => {
   }
 };
 
-// Initialize the app
-const rootElement = document.getElementById("root");
-if (rootElement) {
-  createRoot(rootElement).render(<App />);
-}
-
 // For iOS to use the correct vh
 const setIOSHeight = () => {
   const vh = window.innerHeight * 0.01;
@@ -87,3 +81,13 @@ const setIOSHeight = () => {
 window.addEventListener('resize', setIOSHeight);
 window.addEventListener('orientationchange', setIOSHeight);
 setIOSHeight();
+
+// Initialize the app with StrictMode to catch React issues early
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  createRoot(rootElement).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+}
