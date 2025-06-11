@@ -94,15 +94,15 @@ const AuthSignupForm = ({
         <EmailField 
           email={email} 
           setEmail={setEmail} 
-          loading={loading} 
+          disabled={loading} 
         />
         
         <div className="space-y-3">
           <PasswordField 
             password={password} 
             setPassword={setPassword} 
-            loading={loading}
-            showStrength={true}
+            disabled={loading}
+            showStrengthMeter={true}
           />
           
           <PasswordStrengthMeter password={password} />

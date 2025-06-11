@@ -123,13 +123,13 @@ const AuthLoginForm = ({
           <EmailField 
             email={email} 
             setEmail={setEmail} 
-            loading={loading} 
+            disabled={loading} 
           />
           
           <PasswordField 
             password={password} 
             setPassword={setPassword} 
-            loading={loading} 
+            disabled={loading} 
           />
 
           <RememberMeCheckbox
