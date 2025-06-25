@@ -25,9 +25,9 @@ const TooltipContent = React.forwardRef<
 ))
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
-// Create a simple provider that doesn't use hooks to avoid the useState error
-const TooltipProvider = ({ children }: { children: React.ReactNode }) => {
-  return <TooltipPrimitive.Provider>{children}</TooltipPrimitive.Provider>
+// Create a simple provider that accepts delayDuration but doesn't use hooks to avoid the useState error
+const TooltipProvider = ({ children, delayDuration }: { children: React.ReactNode; delayDuration?: number }) => {
+  return <TooltipPrimitive.Provider delayDuration={delayDuration}>{children}</TooltipPrimitive.Provider>
 }
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
