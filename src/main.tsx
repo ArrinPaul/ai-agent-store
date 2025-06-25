@@ -4,6 +4,11 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
+// Ensure React is available globally to prevent hook issues
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+}
+
 // PWA registration in production
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
