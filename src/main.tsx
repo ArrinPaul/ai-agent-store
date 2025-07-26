@@ -4,10 +4,15 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// Ensure React is available globally to prevent hook issues
-if (typeof window !== 'undefined') {
-  (window as any).React = React;
-}
+// Ensure React is available globally BEFORE anything else
+(window as any).React = React;
+
+// Make React hooks available globally
+(window as any).useEffect = React.useEffect;
+(window as any).useState = React.useState;
+(window as any).useContext = React.useContext;
+(window as any).useCallback = React.useCallback;
+(window as any).useMemo = React.useMemo;
 
 // PWA registration in production
 if ('serviceWorker' in navigator) {
