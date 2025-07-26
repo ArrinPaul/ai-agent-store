@@ -1,5 +1,6 @@
 
-import React, { Suspense, lazy, useEffect } from "react";
+import React, { Suspense, lazy } from "react";
+const { useEffect } = React;
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
