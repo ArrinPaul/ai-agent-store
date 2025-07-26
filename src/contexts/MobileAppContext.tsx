@@ -1,5 +1,6 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, ReactNode } from "react";
+const { useContext, useState, useEffect } = React;
 
 type MobileAppContextType = {
   isInstalled: boolean;
