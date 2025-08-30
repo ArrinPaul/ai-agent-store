@@ -1,6 +1,5 @@
 
-import React, { createContext } from "react";
-const { useContext } = React;
+import React, { createContext, useContext } from "react";
 
 interface MockUser {
   id: string;
