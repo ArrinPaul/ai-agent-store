@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 
 type Theme = "light" | "dark";
 
@@ -13,13 +13,13 @@ const ThemeContext = React.createContext<ThemeContextType>({
 });
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [theme, setTheme] = React.useState<Theme>(() => {
+  const [theme, setTheme] = (window as any).useState(() => {
     const savedTheme = localStorage.getItem("theme");
     return (savedTheme as Theme) || 
       (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   });
 
-  React.useEffect(() => {
+  (window as any).useEffect(() => {
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
     } else {
@@ -29,7 +29,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
+    setTheme((prevTheme: Theme) => (prevTheme === "light" ? "dark" : "light"));
   };
 
   return (
@@ -40,7 +40,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useTheme = () => {
-  const context = React.useContext(ThemeContext);
+  const context = (window as any).useContext(ThemeContext);
   if (context === undefined) {
     throw new Error("useTheme must be used within a ThemeProvider");
   }
