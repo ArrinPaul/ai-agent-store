@@ -1,176 +1,182 @@
 
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { motion } from "framer-motion";
+import FeaturedAgent from "@/components/FeaturedAgent";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useAppStore } from "@/hooks/useAppStore";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Store, TrendingUp, Star, Download } from "lucide-react";
+import { ArrowRight, Star, Download, Users, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
-  const navigate = useNavigate();
-  const { session, user } = useAuth();
-  const { featuredApps, loading } = useAppStore();
+  const featuredApps = [
+    {
+      id: "1",
+      name: "Task Master Pro",
+      description: "Advanced task management with AI-powered scheduling",
+      category: "Productivity",
+      rating: 4.8,
+      downloads: 12500,
+      image_url: "/placeholder.svg",
+      featured: true
+    },
+    {
+      id: "2", 
+      name: "Budget Buddy",
+      description: "Smart personal finance tracker with expense categorization",
+      category: "Finance",
+      rating: 4.6,
+      downloads: 8900,
+      image_url: "/placeholder.svg",
+      featured: true
+    },
+    {
+      id: "3",
+      name: "Fitness Flow",
+      description: "Personalized workout plans and progress tracking",
+      category: "Health",
+      rating: 4.9,
+      downloads: 15600,
+      image_url: "/placeholder.svg", 
+      featured: true
+    }
+  ];
 
-  const handleExploreApps = () => {
-    navigate("/apps");
-  };
-
-  const handleAuthRedirect = () => {
-    navigate("/auth");
-  };
-
-  if (!session) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-blue-600/20 flex flex-col items-center justify-center p-4">
-        <div className="text-center space-y-8 max-w-2xl">
-          <div className="space-y-4">
-            <Store className="h-16 w-16 mx-auto text-primary" />
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-blue-600 text-transparent bg-clip-text">
-              AI Agent Store
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Discover, download, and enjoy thousands of amazing apps
-            </p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={handleAuthRedirect}>
-              Get Started
-            </Button>
-            <Button variant="outline" size="lg" onClick={handleExploreApps}>
-              Browse Apps
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const stats = [
+    { icon: Users, label: "Active Users", value: "50K+" },
+    { icon: Download, label: "Total Downloads", value: "2M+" },
+    { icon: Star, label: "Average Rating", value: "4.7" },
+    { icon: Zap, label: "Apps Available", value: "500+" }
+  ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Welcome Section */}
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl md:text-4xl font-bold">
-            Welcome back, {user?.email?.split('@')[0]}!
-          </h1>
-          <p className="text-muted-foreground">
-            Discover amazing apps tailored just for you
-          </p>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-background py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center space-y-8"
+          >
+            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              AI Agent Store
+            </h1>
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Discover powerful AI agents and tools to supercharge your productivity, 
+              creativity, and daily workflows.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button asChild size="lg" className="text-lg px-8">
+                <Link to="/apps">
+                  Explore Apps <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="text-lg px-8">
+                <Link to="/apps?category=trending">
+                  View Trending
+                </Link>
+              </Button>
+            </div>
+          </motion.div>
         </div>
+      </section>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={handleExploreApps}>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <Store className="h-5 w-5" />
-                Browse Store
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Explore thousands of apps across all categories
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-green-500" />
-                Trending Now
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                See what's popular and trending today
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-yellow-500" />
-                Top Rated
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Discover the highest rated apps by users
-              </p>
-            </CardContent>
-          </Card>
+      {/* Stats Section */}
+      <section className="py-16 px-4 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+          >
+            {stats.map((stat, index) => (
+              <div key={stat.label} className="text-center space-y-3">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary">
+                  <stat.icon className="h-8 w-8" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stat.value}</p>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
         </div>
+      </section>
 
-        {/* Featured Apps Preview */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">Featured Apps</h2>
-            <Button variant="outline" onClick={handleExploreApps}>
-              View All
-            </Button>
-          </div>
+      {/* Featured Apps */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="space-y-12"
+          >
+            <div className="text-center space-y-4">
+              <h2 className="text-4xl font-bold">Featured Apps</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Handpicked applications that showcase the best of AI-powered tools
+              </p>
+            </div>
 
-          {loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="w-12 h-12 rounded-xl" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-3 w-1/2" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredApps.map((app, index) => (
+                <motion.div
+                  key={app.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <FeaturedAgent app={app} />
+                </motion.div>
               ))}
             </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {featuredApps.slice(0, 3).map((app) => (
-                <Card key={app.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={app.icon_url}
-                        alt={app.name}
-                        className="w-12 h-12 rounded-xl"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold truncate">{app.name}</h3>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {app.developer_name}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-xs">{app.rating}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Download className="h-3 w-3" />
-                            <span className="text-xs">{(app.download_count / 1000).toFixed(0)}K</span>
-                          </div>
-                          {app.is_editors_choice && (
-                            <Badge variant="secondary" className="text-xs">
-                              Editor's Choice
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+
+            <div className="text-center">
+              <Button asChild size="lg" variant="outline">
+                <Link to="/apps">
+                  View All Apps <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
             </div>
-          )}
+          </motion.div>
         </div>
-      </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4 bg-primary/5">
+        <div className="container mx-auto max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <Card className="border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5">
+              <CardHeader className="text-center space-y-4">
+                <CardTitle className="text-3xl">Ready to Get Started?</CardTitle>
+                <CardDescription className="text-lg">
+                  Join thousands of users discovering amazing AI-powered applications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center space-y-6">
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Badge variant="secondary">Free to Use</Badge>
+                  <Badge variant="secondary">Regular Updates</Badge>
+                  <Badge variant="secondary">Quality Curated</Badge>
+                </div>
+                <Button asChild size="lg" className="text-lg px-8">
+                  <Link to="/apps">
+                    Start Exploring <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </section>
     </div>
   );
 };
