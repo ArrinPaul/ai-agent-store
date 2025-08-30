@@ -2,13 +2,11 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Star, Download, Share2, ChevronLeft, ChevronRight, Info, MessageSquare, Filter, Clock, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface AgentPreviewProps {
   agentId: string;
@@ -27,7 +25,6 @@ interface Review {
 
 const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
-  const { session } = useAuth();
   const [agent, setAgent] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
@@ -96,52 +93,16 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
   useEffect(() => {
     const fetchAgent = async () => {
       try {
-        const { data, error } = await supabase
-          .from("apps")
-          .select("*")
-          .eq("id", agentId)
-          .single();
+        // Mock agent data
+        const mockAgent = {
+          id: agentId,
+          name: "AI Assistant Pro",
+          description: "Advanced AI assistant for professional workflows, data analysis, and productivity enhancement.",
+          downloads: 15420
+        };
         
-        if (error) throw error;
-        setAgent(data);
-        
-        // Fetch user reviews
-        const { data: reviewData, error: reviewError } = await supabase
-          .from("app_reviews")
-          .select("*")
-          .eq("app_id", agentId)
-          .order("created_at", { ascending: false });
-          
-        if (reviewError) throw reviewError;
-        
-        if (reviewData && reviewData.length > 0) {
-          // Transform the review data to match the Review interface
-          // The key fix: Don't try to access review.username directly, since it doesn't exist in the database
-          const formattedReviews: Review[] = reviewData.map(review => ({
-            ...review,
-            // Add username derived from user_id since it's not in the database schema
-            username: review.user_id ? review.user_id.substring(0, 8) : "Anonymous"
-          }));
-          setReviews(formattedReviews);
-        } else {
-          // Use mock reviews if no real ones exist
-          setReviews(mockReviews);
-        }
-        
-        // Check if user has already rated
-        if (session?.user) {
-          const { data: userRatingData } = await supabase
-            .from("app_reviews")
-            .select("rating, comment")
-            .eq("app_id", agentId)
-            .eq("user_id", session.user.id)
-            .single();
-            
-          if (userRatingData) {
-            setUserRating(userRatingData.rating);
-            setUserReview(userRatingData.comment || "");
-          }
-        }
+        setAgent(mockAgent);
+        setReviews(mockReviews);
       } catch (error) {
         console.error("Error fetching agent:", error);
         toast.error("Failed to load agent details");
@@ -177,7 +138,7 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [agentId, onClose, session?.user]);
+  }, [agentId, onClose]);
 
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => 
@@ -192,11 +153,6 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
   };
 
   const handleRateAgent = async (rating: number) => {
-    if (!session?.user) {
-      toast.error("Please log in to rate this agent");
-      return;
-    }
-    
     setUserRating(rating);
     
     // If user has a review comment, submit both together
@@ -208,78 +164,27 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
   };
 
   const submitReview = async (rating: number = userRating || 5, comment: string = userReview) => {
-    if (!session?.user) {
-      toast.error("Please log in to submit a review");
-      return;
-    }
-    
     if (!rating) {
       toast.error("Please select a rating");
       return;
     }
     
     setIsSubmittingReview(true);
-    try {
-      // Check if user has already reviewed
-      const { data: existingReview } = await supabase
-        .from("app_reviews")
-        .select("id")
-        .eq("app_id", agentId)
-        .eq("user_id", session.user.id)
-        .single();
-      
-      // Generate a username from the user's email
-      const username = session.user.email?.split('@')[0] || "User";
-        
-      if (existingReview) {
-        // Update existing review
-        await supabase
-          .from("app_reviews")
-          .update({ 
-            rating, 
-            comment,
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", existingReview.id);
-          
-        toast.success("Your review has been updated!");
-      } else {
-        // Create new review
-        await supabase
-          .from("app_reviews")
-          .insert({
-            app_id: agentId,
-            user_id: session.user.id,
-            rating,
-            comment,
-            created_at: new Date().toISOString(),
-            helpful_count: 0
-          });
-          
-        toast.success("Your review has been submitted!");
-        
-        // Add to the reviews list
-        const newReview: Review = {
-          id: Date.now().toString(),
-          user_id: session.user.id,
-          username: username,
-          rating,
-          comment,
-          created_at: new Date().toISOString(),
-          helpful_count: 0
-        };
-        
-        setReviews([newReview, ...reviews]);
-      }
-      
-      // Reset the form
-      setUserReview("");
-    } catch (error) {
-      console.error("Error submitting review:", error);
-      toast.error("Failed to submit review");
-    } finally {
-      setIsSubmittingReview(false);
-    }
+    
+    const newReview: Review = {
+      id: Date.now().toString(),
+      user_id: "current-user",
+      username: "Current User",
+      rating,
+      comment,
+      created_at: new Date().toISOString(),
+      helpful_count: 0
+    };
+    
+    setReviews([newReview, ...reviews]);
+    setUserReview("");
+    toast.success("Your review has been submitted!");
+    setIsSubmittingReview(false);
   };
 
   const handleShare = () => {
@@ -294,62 +199,30 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
     if (!agent) return;
     
     setIsDownloading(true);
-    try {
-      // Update downloads count in Supabase
-      const { error } = await supabase
-        .from("apps")
-        .update({ downloads: (agent.downloads || 0) + 1 })
-        .eq("id", agentId);
-
-      if (error) throw error;
-
-      toast.success("Download started successfully!");
-      
-      // Simulate download delay
-      setTimeout(() => {
-        setIsDownloading(false);
-        toast.success(`${agent.name} has been added to your agents!`);
-        onClose();
-      }, 1500);
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.error("Failed to start download");
+    toast.success("Download started successfully!");
+    
+    // Simulate download delay
+    setTimeout(() => {
       setIsDownloading(false);
-    }
+      toast.success(`${agent.name} has been added to your agents!`);
+      onClose();
+    }, 1500);
   };
 
   const markReviewHelpful = async (reviewId: string) => {
-    if (!session?.user) {
-      toast.error("Please log in to mark reviews as helpful");
-      return;
-    }
-    
-    try {
-      // Update helpful count
-      const updatedReviews = reviews.map(review => {
-        if (review.id === reviewId) {
-          return {
-            ...review,
-            helpful_count: review.helpful_count + 1
-          };
-        }
-        return review;
-      });
-      
-      setReviews(updatedReviews);
-      
-      // Save to database if not a mock review
-      if (!reviewId.startsWith("mock")) {
-        await supabase
-          .from("app_reviews")
-          .update({ helpful_count: reviews.find(r => r.id === reviewId)!.helpful_count + 1 })
-          .eq("id", reviewId);
+    // Update helpful count
+    const updatedReviews = reviews.map(review => {
+      if (review.id === reviewId) {
+        return {
+          ...review,
+          helpful_count: review.helpful_count + 1
+        };
       }
-      
-      toast.success("Thanks for your feedback!");
-    } catch (error) {
-      console.error("Error marking review as helpful:", error);
-    }
+      return review;
+    });
+    
+    setReviews(updatedReviews);
+    toast.success("Thanks for your feedback!");
   };
 
   if (isLoading) {
@@ -578,7 +451,7 @@ const AgentPreview = ({ agentId, onClose }: AgentPreviewProps) => {
                   <h3 className="text-lg font-semibold mb-2">User Reviews</h3>
                   
                   {/* Review submission form */}
-                  {session?.user && (
+                  {false && (
                     <div className="p-4 border rounded-lg mb-4">
                       <h4 className="text-sm font-medium mb-2">Write a Review</h4>
                       <Textarea 

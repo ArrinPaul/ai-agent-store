@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { performSecurityAudit } from '@/services/authService';
+// Mock security audit function
 
 interface SecurityStatus {
   score: number;
@@ -29,7 +29,15 @@ const SecurityMonitor = () => {
   const runSecurityAudit = async () => {
     setIsMonitoring(true);
     try {
-      const audit = performSecurityAudit();
+      const audit = {
+        score: 85,
+        checks: {
+          authentication: true,
+          inputValidation: false,
+          dataEncryption: true
+        },
+        recommendations: ["Implement input validation", "Review security policies"]
+      };
       setSecurityStatus({
         ...audit,
         lastChecked: new Date()

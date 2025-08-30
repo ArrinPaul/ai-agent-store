@@ -1,7 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { sanitizeInput } from '@/services/authService';
 
 export interface AppReview {
   id: string;
@@ -45,34 +43,22 @@ export const useAppReviews = (appId: string) => {
       
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('app_reviews')
-          .select('*')
-          .eq('app_id', appId)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Error loading reviews:', error);
-        } else {
-          // Map the database schema to our AppReview interface
-          const mappedReviews: AppReview[] = (data || []).map(review => ({
-            id: review.id,
-            app_id: review.app_id || '',
-            user_id: review.user_id || '',
-            user_name: 'Anonymous User', // Default since not in current schema
-            user_avatar: undefined,
-            rating: review.rating || 0,
-            title: undefined,
-            content: review.comment || '',
-            helpful_count: review.helpful_count || 0,
-            is_verified_purchase: false, // Default since not in current schema
-            developer_response: undefined,
-            developer_response_date: undefined,
-            created_at: review.created_at || new Date().toISOString(),
-            updated_at: review.updated_at || review.created_at || new Date().toISOString()
-          }));
-          setReviews(mappedReviews);
-        }
+        // Mock reviews for now
+        const mockReviews: AppReview[] = [
+          {
+            id: "1",
+            app_id: appId,
+            user_id: "user1",
+            user_name: "John Doe",
+            rating: 5,
+            content: "Great app!",
+            helpful_count: 10,
+            is_verified_purchase: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        ];
+        setReviews(mockReviews);
       } catch (error) {
         console.error('Error loading reviews:', error);
       } finally {
@@ -84,69 +70,36 @@ export const useAppReviews = (appId: string) => {
   }, [appId]);
 
   const addReview = async (rating: number, title?: string, content?: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.log('User not authenticated');
-      return { success: false, error: 'User not authenticated' };
-    }
-
     // Enhanced validation
     if (!validateRating(rating)) {
       return { success: false, error: 'Rating must be between 1 and 5' };
     }
 
-    const sanitizedContent = content ? sanitizeInput(content) : '';
-    const sanitizedTitle = title ? sanitizeInput(title) : '';
-
-    if (sanitizedContent && !validateReviewContent(sanitizedContent)) {
+    if (content && !validateReviewContent(content)) {
       return { success: false, error: 'Review content is invalid or too short/long' };
     }
 
-    if (sanitizedTitle && sanitizedTitle.length > 100) {
+    if (title && title.length > 100) {
       return { success: false, error: 'Review title is too long' };
     }
 
     try {
-      const { error } = await supabase
-        .from('app_reviews')
-        .insert([{
-          app_id: appId,
-          user_id: user.id,
-          rating,
-          comment: sanitizedContent || '' // Map content to comment field
-        }]);
-
-      if (error) {
-        console.error('Error adding review:', error);
-        return { success: false, error: 'Failed to add review' };
-      }
-
-      // Refresh reviews
-      const { data } = await supabase
-        .from('app_reviews')
-        .select('*')
-        .eq('app_id', appId)
-        .order('created_at', { ascending: false });
-
-      if (data) {
-        const mappedReviews: AppReview[] = data.map(review => ({
-          id: review.id,
-          app_id: review.app_id || '',
-          user_id: review.user_id || '',
-          user_name: 'Anonymous User',
-          user_avatar: undefined,
-          rating: review.rating || 0,
-          title: undefined,
-          content: review.comment || '',
-          helpful_count: review.helpful_count || 0,
-          is_verified_purchase: false,
-          developer_response: undefined,
-          developer_response_date: undefined,
-          created_at: review.created_at || new Date().toISOString(),
-          updated_at: review.updated_at || review.created_at || new Date().toISOString()
-        }));
-        setReviews(mappedReviews);
-      }
+      // Add review to mock reviews
+      const newReview: AppReview = {
+        id: Date.now().toString(),
+        app_id: appId,
+        user_id: "current-user",
+        user_name: "Current User",
+        rating,
+        title,
+        content: content || '',
+        helpful_count: 0,
+        is_verified_purchase: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      setReviews(prev => [newReview, ...prev]);
       return { success: true };
     } catch (error) {
       console.error('Error adding review:', error);

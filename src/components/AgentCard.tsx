@@ -2,8 +2,6 @@ import { Download, Heart, Eye, Share2, Bookmark, Star } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import AgentPreview from "./AgentPreview";
@@ -35,126 +33,33 @@ const AgentCard = ({
   const [isBookmarked, setIsBookmarked] = useState(bookmarked);
   const [isHovered, setIsHovered] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const { session } = useAuth();
   
   useEffect(() => {
-    const checkIfFavorite = async () => {
-      if (!session?.user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("favorites")
-          .eq("id", session.user.id)
-          .single();
-        
-        if (error) throw error;
-        
-        const favorites = data.favorites as string[] || [];
-        setIsFavorite(favorites.includes(id));
-      } catch (error) {
-        console.error("Error checking favorites:", error);
-      }
-    };
-    
-    checkIfFavorite();
     setIsBookmarked(bookmarked);
-  }, [id, session?.user, bookmarked]);
+  }, [bookmarked]);
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsDownloading(true);
-    try {
-      const { error } = await supabase
-        .from("apps")
-        .update({ downloads: (downloads || 0) + 1 })
-        .eq("id", id);
-
-      if (error) throw error;
-
-      toast.success("Download started successfully!");
-      
-      setTimeout(() => {
-        setIsDownloading(false);
-        toast.success(`${name} has been added to your agents!`);
-      }, 1500);
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.error("Failed to start download");
+    
+    toast.success("Download started successfully!");
+    
+    setTimeout(() => {
       setIsDownloading(false);
-    }
+      toast.success(`${name} has been added to your agents!`);
+    }, 1500);
   };
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!session?.user) {
-      toast.error("You must be logged in to favorite agents");
-      return;
-    }
-    
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("favorites")
-        .eq("id", session.user.id)
-        .single();
-      
-      if (error) throw error;
-      
-      const favorites = data.favorites as string[] || [];
-      const updatedFavorites = isFavorite
-        ? favorites.filter((favId: string) => favId !== id)
-        : [...favorites, id];
-      
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ favorites: updatedFavorites })
-        .eq("id", session.user.id);
-      
-      if (updateError) throw updateError;
-      
-      setIsFavorite(!isFavorite);
-      toast.success(isFavorite ? "Removed from favorites" : "Added to favorites");
-    } catch (error) {
-      console.error("Error updating favorites:", error);
-      toast.error("Failed to update favorites");
-    }
+    setIsFavorite(!isFavorite);
+    toast.success(isFavorite ? "Removed from favorites" : "Added to favorites");
   };
 
   const toggleBookmark = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!session?.user) {
-      toast.error("You must be logged in to bookmark agents");
-      return;
-    }
-    
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("bookmarks")
-        .eq("id", session.user.id)
-        .single();
-      
-      if (error) throw error;
-      
-      const bookmarks = data.bookmarks as string[] || [];
-      const updatedBookmarks = isBookmarked
-        ? bookmarks.filter((bookmarkId: string) => bookmarkId !== id)
-        : [...bookmarks, id];
-      
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ bookmarks: updatedBookmarks })
-        .eq("id", session.user.id);
-      
-      if (updateError) throw updateError;
-      
-      setIsBookmarked(!isBookmarked);
-      toast.success(isBookmarked ? "Removed from bookmarks" : "Saved to bookmarks");
-    } catch (error) {
-      console.error("Error updating bookmarks:", error);
-      toast.error("Failed to update bookmarks");
-    }
+    setIsBookmarked(!isBookmarked);
+    toast.success(isBookmarked ? "Removed from bookmarks" : "Saved to bookmarks");
   };
 
   const handleQuickView = (e: React.MouseEvent) => {

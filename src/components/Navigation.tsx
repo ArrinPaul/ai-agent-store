@@ -3,7 +3,6 @@ import { Moon, Sun, Upload, UserCircle, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,14 +55,7 @@ const Navigation = () => {
         navigate("/apps");
         break;
       case "Sign out":
-        try {
-          const { error } = await supabase.auth.signOut();
-          if (error) throw error;
-          navigate("/auth");
-          toast.success("Signed out successfully");
-        } catch (error: any) {
-          toast.error("Error signing out");
-        }
+        toast.info("Sign out feature coming soon!");
         break;
       default:
         toast.info(`${action} coming soon!`);

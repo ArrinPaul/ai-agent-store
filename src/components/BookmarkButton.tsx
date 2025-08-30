@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react";
 import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 
@@ -26,58 +24,23 @@ const BookmarkButton = ({
 }: BookmarkButtonProps) => {
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
   const [isLoading, setIsLoading] = useState(false);
-  const { session } = useAuth();
 
   useEffect(() => {
     setIsBookmarked(initialBookmarked);
   }, [initialBookmarked]);
 
   const toggleBookmark = async () => {
-    if (!session?.user) {
-      toast.error("Please log in to bookmark agents");
-      return;
-    }
-    
     setIsLoading(true);
     
-    try {
-      // Get current bookmarks
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("bookmarks")
-        .eq("id", session.user.id)
-        .single();
-      
-      if (error) throw error;
-      
-      // Update bookmarks array
-      const bookmarks = data.bookmarks as string[] || [];
-      const updatedBookmarks = isBookmarked
-        ? bookmarks.filter(id => id !== appId)
-        : [...bookmarks, appId];
-      
-      // Save updated bookmarks
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ bookmarks: updatedBookmarks })
-        .eq("id", session.user.id);
-      
-      if (updateError) throw updateError;
-      
-      const newBookmarkedState = !isBookmarked;
-      setIsBookmarked(newBookmarkedState);
-      
-      if (onBookmarkChange) {
-        onBookmarkChange(newBookmarkedState);
-      }
-      
-      toast.success(isBookmarked ? "Removed from bookmarks" : "Saved to bookmarks");
-    } catch (error) {
-      console.error("Error updating bookmarks:", error);
-      toast.error("Failed to update bookmarks");
-    } finally {
-      setIsLoading(false);
+    const newBookmarkedState = !isBookmarked;
+    setIsBookmarked(newBookmarkedState);
+    
+    if (onBookmarkChange) {
+      onBookmarkChange(newBookmarkedState);
     }
+    
+    toast.success(isBookmarked ? "Removed from bookmarks" : "Saved to bookmarks");
+    setIsLoading(false);
   };
 
   const sizeClasses = {

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Search, X, ArrowRight, Clock, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
@@ -74,43 +73,19 @@ const SearchBar = ({ className = "", hideOnMobile = false }: SearchBarProps) => 
       }
 
       setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("apps")
-          .select("name")
-          .ilike("name", `%${searchTerm}%`)
-          .order("search_count", { ascending: false })
-          .limit(5);
-
-        if (error) throw error;
-        
-        const { data: categoryData, error: categoryError } = await supabase
-          .from("apps")
-          .select("category")
-          .ilike("category", `%${searchTerm}%`)
-          .order("search_count", { ascending: false })
-          .limit(3);
-          
-        if (categoryError) throw categoryError;
-        
-        const uniqueCategories = Array.from(new Set(categoryData.map(item => item.category)))
-          .filter(Boolean)
-          .map(category => ({
-            name: category as string,
-            type: 'category' as const
-          }));
-          
-        const appSuggestions = data.map(app => ({
-          name: app.name,
-          type: 'suggestion' as const
-        }));
-        
-        setSuggestions([...appSuggestions, ...uniqueCategories]);
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
-      } finally {
+      
+      // Mock suggestions for now
+      const mockSuggestions = [
+        { name: "AI Assistant", type: 'suggestion' as const },
+        { name: "Image Generator", type: 'suggestion' as const },
+        { name: "Productivity", type: 'category' as const },
+        { name: "Photography", type: 'category' as const }
+      ].filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      setTimeout(() => {
+        setSuggestions(mockSuggestions);
         setIsLoading(false);
-      }
+      }, 300);
     };
 
     const debounceTimer = setTimeout(() => {
@@ -131,34 +106,16 @@ const SearchBar = ({ className = "", hideOnMobile = false }: SearchBarProps) => 
     setShowSuggestions(false);
     saveRecentSearch(searchTerm.trim());
     
-    try {
-      const { data, error } = await supabase
-        .from("apps")
-        .select("*")
-        .ilike("name", `%${searchTerm}%`)
-        .order("downloads", { ascending: false });
-      
-      if (error) throw error;
-      
-      localStorage.setItem("searchResults", JSON.stringify(data));
-      
-      if (data.length > 0) {
-        const updatePromises = data.map(app => 
-          supabase
-            .from("apps")
-            .update({ search_count: (app.search_count || 0) + 1 })
-            .eq("id", app.id)
-        );
-        
-        await Promise.all(updatePromises);
-      }
-      
-      navigate(`/apps?search=${encodeURIComponent(searchTerm)}`);
-      toast.success(`Found ${data.length} results for "${searchTerm}"`);
-    } catch (error) {
-      console.error("Search error:", error);
-      toast.error("Failed to perform search");
-    }
+    // Mock search for now
+    const mockResults = [
+      { id: "1", name: "AI Assistant", category: "Productivity" },
+      { id: "2", name: "Image Generator", category: "Photography" }
+    ].filter(app => app.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    localStorage.setItem("searchResults", JSON.stringify(mockResults));
+    
+    navigate(`/apps?search=${encodeURIComponent(searchTerm)}`);
+    toast.success(`Found ${mockResults.length} results for "${searchTerm}"`);
   };
 
   const selectSuggestion = (suggestion: string, type: 'suggestion' | 'recent' | 'category') => {

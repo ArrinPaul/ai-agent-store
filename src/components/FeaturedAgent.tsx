@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { ArrowRight, Star, Users, Check, Award, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import AgentPreview from "./AgentPreview";
 
@@ -16,26 +15,19 @@ const FeaturedAgent = () => {
   const [userRating, setUserRating] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchFeaturedAgent = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("apps")
-          .select("*")
-          .eq("featured", true)
-          .order("downloads", { ascending: false })
-          .limit(1)
-          .single();
-        
-        if (error) throw error;
-        setFeaturedAgent(data);
-      } catch (error) {
-        console.error("Error fetching featured agent:", error);
-      } finally {
-        setIsLoading(false);
-      }
+    const mockAgent = {
+      id: "featured-1",
+      name: "AI Assistant Pro",
+      description: "Advanced AI assistant for professional workflows, data analysis, and productivity enhancement.",
+      downloads: 15420,
+      featured: true,
+      image_url: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6"
     };
-
-    fetchFeaturedAgent();
+    
+    setTimeout(() => {
+      setFeaturedAgent(mockAgent);
+      setIsLoading(false);
+    }, 500);
   }, []);
 
   const handleTryNow = () => {

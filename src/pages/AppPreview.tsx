@@ -14,17 +14,14 @@ import {
   Bookmark 
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 const AppPreview = () => {
   const { appId } = useParams();
-  const { session } = useAuth();
   const [app, setApp] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
@@ -96,59 +93,17 @@ const AppPreview = () => {
       try {
         setIsLoading(true);
         
-        const { data, error } = await supabase
-          .from("apps")
-          .select("*")
-          .eq("id", appId)
-          .single();
+        // Mock app data
+        const mockApp = {
+          id: appId,
+          name: "AI Assistant Pro",
+          description: "Advanced AI assistant for professional workflows",
+          downloads: 15420,
+          image_url: "https://images.unsplash.com/photo-1677442136019-21780ecad995"
+        };
         
-        if (error) throw error;
-        setApp(data);
-        
-        const { data: reviewData, error: reviewError } = await supabase
-          .from("app_reviews")
-          .select("*")
-          .eq("app_id", appId)
-          .order("created_at", { ascending: false });
-          
-        if (reviewError) throw reviewError;
-        
-        if (reviewData && reviewData.length > 0) {
-          const formattedReviews = reviewData.map(review => ({
-            ...review,
-            username: review.user_id ? review.user_id.substring(0, 8) : "Anonymous"
-          }));
-          setReviews(formattedReviews);
-        } else {
-          setReviews(mockReviews);
-        }
-        
-        if (session?.user) {
-          const { data: userRatingData } = await supabase
-            .from("app_reviews")
-            .select("rating, comment")
-            .eq("app_id", appId)
-            .eq("user_id", session.user.id)
-            .single();
-            
-          if (userRatingData) {
-            setUserRating(userRatingData.rating);
-            setUserReview(userRatingData.comment || "");
-          }
-
-          const { data: userData } = await supabase
-            .from("profiles")
-            .select("favorites, bookmarks")
-            .eq("id", session.user.id)
-            .single();
-          
-          if (userData) {
-            const favorites = userData.favorites as string[] || [];
-            const bookmarks = userData.bookmarks as string[] || [];
-            setIsFavorite(favorites.includes(appId));
-            setIsBookmarked(bookmarks.includes(appId));
-          }
-        }
+        setApp(mockApp);
+        setReviews(mockReviews);
       } catch (error) {
         console.error("Error fetching app:", error);
         toast.error("Failed to load app details");
@@ -158,7 +113,7 @@ const AppPreview = () => {
     };
 
     fetchApp();
-  }, [appId, session?.user]);
+  }, [appId]);
 
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => 
@@ -173,11 +128,6 @@ const AppPreview = () => {
   };
 
   const handleRateApp = async (rating: number) => {
-    if (!session?.user) {
-      toast.error("Please log in to rate this app");
-      return;
-    }
-    
     setUserRating(rating);
     
     if (userReview) {
@@ -188,72 +138,27 @@ const AppPreview = () => {
   };
 
   const submitReview = async (rating: number = userRating || 5, comment: string = userReview) => {
-    if (!session?.user || !appId) {
-      toast.error("Please log in to submit a review");
-      return;
-    }
-    
     if (!rating) {
       toast.error("Please select a rating");
       return;
     }
     
     setIsSubmittingReview(true);
-    try {
-      const { data: existingReview } = await supabase
-        .from("app_reviews")
-        .select("id")
-        .eq("app_id", appId)
-        .eq("user_id", session.user.id)
-        .single();
-      
-      const username = session.user.email?.split('@')[0] || "User";
-        
-      if (existingReview) {
-        await supabase
-          .from("app_reviews")
-          .update({ 
-            rating, 
-            comment,
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", existingReview.id);
-          
-        toast.success("Your review has been updated!");
-      } else {
-        await supabase
-          .from("app_reviews")
-          .insert({
-            app_id: appId,
-            user_id: session.user.id,
-            rating,
-            comment,
-            created_at: new Date().toISOString(),
-            helpful_count: 0
-          });
-          
-        toast.success("Your review has been submitted!");
-        
-        const newReview = {
-          id: Date.now().toString(),
-          user_id: session.user.id,
-          username: username,
-          rating,
-          comment,
-          created_at: new Date().toISOString(),
-          helpful_count: 0
-        };
-        
-        setReviews([newReview, ...reviews]);
-      }
-      
-      setUserReview("");
-    } catch (error) {
-      console.error("Error submitting review:", error);
-      toast.error("Failed to submit review");
-    } finally {
-      setIsSubmittingReview(false);
-    }
+    
+    const newReview = {
+      id: Date.now().toString(),
+      user_id: "current-user",
+      username: "Current User",
+      rating,
+      comment,
+      created_at: new Date().toISOString(),
+      helpful_count: 0
+    };
+    
+    setReviews([newReview, ...reviews]);
+    setUserReview("");
+    toast.success("Your review has been submitted!");
+    setIsSubmittingReview(false);
   };
 
   const handleShare = () => {
@@ -267,127 +172,37 @@ const AppPreview = () => {
     if (!app || !appId) return;
     
     setIsDownloading(true);
-    try {
-      const { error } = await supabase
-        .from("apps")
-        .update({ downloads: (app.downloads || 0) + 1 })
-        .eq("id", appId);
-
-      if (error) throw error;
-
-      toast.success("Download started successfully!");
-      
-      setTimeout(() => {
-        setIsDownloading(false);
-        toast.success(`${app.name} has been added to your apps!`);
-      }, 1500);
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.error("Failed to start download");
+    toast.success("Download started successfully!");
+    
+    setTimeout(() => {
       setIsDownloading(false);
-    }
+      toast.success(`${app.name} has been added to your apps!`);
+    }, 1500);
   };
 
   const toggleFavorite = async () => {
-    if (!session?.user || !appId) {
-      toast.error("You must be logged in to favorite apps");
-      return;
-    }
-    
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("favorites")
-        .eq("id", session.user.id)
-        .single();
-      
-      if (error) throw error;
-      
-      const favorites = data.favorites as string[] || [];
-      const updatedFavorites = isFavorite
-        ? favorites.filter((favId: string) => favId !== appId)
-        : [...favorites, appId];
-      
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ favorites: updatedFavorites })
-        .eq("id", session.user.id);
-      
-      if (updateError) throw updateError;
-      
-      setIsFavorite(!isFavorite);
-      toast.success(isFavorite ? "Removed from favorites" : "Added to favorites");
-    } catch (error) {
-      console.error("Error updating favorites:", error);
-      toast.error("Failed to update favorites");
-    }
+    setIsFavorite(!isFavorite);
+    toast.success(isFavorite ? "Removed from favorites" : "Added to favorites");
   };
 
   const toggleBookmark = async () => {
-    if (!session?.user || !appId) {
-      toast.error("You must be logged in to bookmark apps");
-      return;
-    }
-    
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("bookmarks")
-        .eq("id", session.user.id)
-        .single();
-      
-      if (error) throw error;
-      
-      const bookmarks = data.bookmarks as string[] || [];
-      const updatedBookmarks = isBookmarked
-        ? bookmarks.filter((bookmarkId: string) => bookmarkId !== appId)
-        : [...bookmarks, appId];
-      
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ bookmarks: updatedBookmarks })
-        .eq("id", session.user.id);
-      
-      if (updateError) throw updateError;
-      
-      setIsBookmarked(!isBookmarked);
-      toast.success(isBookmarked ? "Removed from bookmarks" : "Saved to bookmarks");
-    } catch (error) {
-      console.error("Error updating bookmarks:", error);
-      toast.error("Failed to update bookmarks");
-    }
+    setIsBookmarked(!isBookmarked);
+    toast.success(isBookmarked ? "Removed from bookmarks" : "Saved to bookmarks");
   };
 
   const markReviewHelpful = async (reviewId: string) => {
-    if (!session?.user) {
-      toast.error("Please log in to mark reviews as helpful");
-      return;
-    }
-    
-    try {
-      const updatedReviews = reviews.map(review => {
-        if (review.id === reviewId) {
-          return {
-            ...review,
-            helpful_count: review.helpful_count + 1
-          };
-        }
-        return review;
-      });
-      
-      setReviews(updatedReviews);
-      
-      if (!reviewId.startsWith("mock")) {
-        await supabase
-          .from("app_reviews")
-          .update({ helpful_count: reviews.find(r => r.id === reviewId)!.helpful_count + 1 })
-          .eq("id", reviewId);
+    const updatedReviews = reviews.map(review => {
+      if (review.id === reviewId) {
+        return {
+          ...review,
+          helpful_count: review.helpful_count + 1
+        };
       }
-      
-      toast.success("Thanks for your feedback!");
-    } catch (error) {
-      console.error("Error marking review as helpful:", error);
-    }
+      return review;
+    });
+    
+    setReviews(updatedReviews);
+    toast.success("Thanks for your feedback!");
   };
 
   if (isLoading) {
@@ -624,7 +439,7 @@ const AppPreview = () => {
             <TabsContent value="reviews" className="space-y-4">
               <h3 className="text-lg font-semibold mb-2">User Reviews</h3>
               
-              {session?.user && (
+              {false && (
                 <div className="p-4 border rounded-lg mb-4">
                   <h4 className="text-sm font-medium mb-2">Write a Review</h4>
                   <Textarea 

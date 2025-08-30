@@ -5,7 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { validateEmail, validatePassword, sanitizeInput } from '@/services/authService';
+// Mock validation functions
+const sanitizeInput = (input: string) => input.replace(/<[^>]*>/g, '').replace(/javascript:/gi, '');
+const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !/</.test(email);
+const validatePassword = (password: string) => ({ isValid: password.length >= 8 && /[A-Z]/.test(password) });
 
 interface SecurityTest {
   name: string;
