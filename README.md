@@ -1,3 +1,18 @@
+# AI Agent Store
+
+**Project Summary:**  
+AI Agent Store is a marketplace and management platform for deploying, sharing, and integrating AI-powered agents. The platform enables users to browse, configure, and launch AI agents for a variety of tasks and applications.
+
+**Tech Stack:**  
+- **Frontend:** TypeScript, React, Vite
+- **UI Framework:** shadcn-ui, Tailwind CSS
+- **State Management:** React Query (TanStack Query)
+- **Mobile:** Capacitor for iOS/Android support
+- **Routing:** React Router
+- **Other:** Framer Motion for animations, Supabase for backend services, REST APIs, GitHub for version control
+
+---
+
 # Welcome to your Lovable project
 
 ## Project info
